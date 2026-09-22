@@ -195,6 +195,77 @@ municipio_selecionado = st.sidebar.selectbox(
     key="municipio_selecionado"
 )
 
+# Upload de dados complementares
+st.sidebar.markdown("---")
+st.sidebar.subheader("Dados complementares")
+
+arquivo_upload = st.sidebar.file_uploader(
+    "Adicionar arquivo CSV",
+    type=["csv"]
+)
+
+if arquivo_upload is not None:
+
+    try:
+        df_upload = pd.read_csv(
+            arquivo_upload,
+            dtype={"codigo_ibge": str}
+        )
+
+        if df_upload.empty:
+            st.sidebar.error(
+                "O arquivo enviado está vazio."
+            )
+
+        elif "codigo_ibge" not in df_upload.columns:
+            st.sidebar.error(
+                "O arquivo deve conter a coluna 'codigo_ibge'."
+            )
+
+        elif len(df_upload.columns) == 1:
+            st.sidebar.error(
+                "O arquivo deve conter pelo menos uma coluna "
+                "adicional além de 'codigo_ibge'."
+            )
+
+        else:
+            st.session_state["dados_upload"] = df_upload
+
+            st.sidebar.success(
+                f"Arquivo carregado: {len(df_upload)} registros."
+            )
+
+    except Exception as erro:
+        st.sidebar.error(
+            f"Não foi possível ler o arquivo: {erro}"
+        )
+
+# Integra os dados enviados pelo usuário
+if "dados_upload" in st.session_state:
+
+    df_acesso = df_acesso.merge(
+        st.session_state["dados_upload"],
+        on="codigo_ibge",
+        how="left"
+    )
+
+# Atualiza os dados da UF após a integração
+df_uf = df_acesso[
+    df_acesso["uf"] == uf_selecionada
+].copy()
+
+
+# Download dos dados filtrados e processados
+csv_download = df_uf.to_csv(
+    index=False
+).encode("utf-8-sig")
+
+st.sidebar.download_button(
+    label="Baixar dados da UF selecionada",
+    data=csv_download,
+    file_name=f"dados_{uf_selecionada}.csv",
+    mime="text/csv"
+)
 
 # Dados do município selecionado
 dados_municipio = df_uf[
