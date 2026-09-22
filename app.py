@@ -119,9 +119,7 @@ with col_iniciativas:
 st.markdown("---")
 
 
-# Amostra dos dados
-st.header("Amostra dos Dados")
-
+# Dados municipais
 arquivo_dados = (
     Path(__file__).parent
     / "02_data_ingest_understanding"
@@ -133,6 +131,170 @@ df_acesso = pd.read_csv(
     arquivo_dados,
     dtype={"codigo_ibge": str}
 )
+
+
+# Separa a UF do nome do município
+df_acesso["uf"] = df_acesso["municipio"].str.extract(
+    r" - ([A-Z]{2})$"
+)
+
+df_acesso["municipio_nome"] = df_acesso["municipio"].str.replace(
+    r" - [A-Z]{2}$",
+    "",
+    regex=True
+)
+
+
+# Filtros
+st.sidebar.header("Filtros")
+
+ufs = sorted(
+    df_acesso["uf"]
+    .dropna()
+    .unique()
+)
+
+uf_selecionada = st.sidebar.selectbox(
+    "Selecione uma UF",
+    ufs
+)
+
+df_uf = df_acesso[
+    df_acesso["uf"] == uf_selecionada
+].copy()
+
+municipios = sorted(
+    df_uf["municipio_nome"]
+    .dropna()
+    .unique()
+)
+
+municipio_selecionado = st.sidebar.selectbox(
+    "Selecione um município",
+    municipios
+)
+
+
+# Dados do município selecionado
+dados_municipio = df_uf[
+    df_uf["municipio_nome"] == municipio_selecionado
+].iloc[0]
+
+
+st.markdown("---")
+
+st.header("Exploração Interativa")
+
+st.write(
+    """
+    Utilize os filtros na barra lateral para selecionar uma unidade
+    da federação e um município. Os indicadores abaixo permitem comparar
+    a situação do município selecionado com os valores do seu estado.
+    """
+)
+
+
+# Indicadores do município e da UF
+media_sem_internet_uf = (
+    df_uf["percentual_sem_internet"].mean()
+)
+
+mediana_renda_uf = (
+    df_uf["renda_mediana_per_capita"].median()
+)
+
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.metric(
+        "Domicílios sem internet",
+        f"{dados_municipio['percentual_sem_internet']:.2f}%"
+    )
+
+with col2:
+    st.metric(
+        f"Média em {uf_selecionada}",
+        f"{media_sem_internet_uf:.2f}%"
+    )
+
+with col3:
+    st.metric(
+        "Renda mediana per capita",
+        f"R$ {dados_municipio['renda_mediana_per_capita']:.2f}"
+    )
+
+with col4:
+    st.metric(
+        f"Mediana em {uf_selecionada}",
+        f"R$ {mediana_renda_uf:.2f}"
+    )
+
+
+# Tabela da UF selecionada
+st.subheader(
+    f"Municípios de {uf_selecionada}"
+)
+
+st.write(
+    """
+    A tabela apresenta os municípios da UF selecionada,
+    ordenados pelo percentual de domicílios sem conexão
+    domiciliar à internet.
+    """
+)
+
+df_uf_exibicao = (
+    df_uf[
+        [
+            "codigo_ibge",
+            "municipio_nome",
+            "percentual_sem_internet",
+            "renda_mediana_per_capita"
+        ]
+    ]
+    .sort_values(
+        by="percentual_sem_internet",
+        ascending=False
+    )
+    .rename(
+        columns={
+            "codigo_ibge": "Código IBGE",
+            "municipio_nome": "Município",
+            "percentual_sem_internet": "Domicílios sem internet (%)",
+            "renda_mediana_per_capita": "Renda mediana per capita (R$)"
+        }
+    )
+)
+
+st.dataframe(
+    df_uf_exibicao,
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        "Código IBGE": st.column_config.TextColumn(
+            "Código IBGE"
+        ),
+        "Município": st.column_config.TextColumn(
+            "Município"
+        ),
+        "Domicílios sem internet (%)": st.column_config.NumberColumn(
+            "Domicílios sem internet (%)",
+            format="%.2f%%"
+        ),
+        "Renda mediana per capita (R$)": st.column_config.NumberColumn(
+            "Renda mediana per capita (R$)",
+            format="R$ %.2f"
+        )
+    }
+)
+
+
+st.markdown("---")
+
+
+# Panorama nacional
+st.header("Panorama Nacional")
 
 st.write(
     """
@@ -158,7 +320,14 @@ df_amostra = df_exibicao.sort_values(
 ).head(10)
 
 st.dataframe(
-    df_amostra,
+    df_amostra[
+        [
+            "Código IBGE",
+            "Município",
+            "Domicílios sem internet (%)",
+            "Renda mediana per capita (R$)"
+        ]
+    ],
     use_container_width=True,
     hide_index=True,
     column_config={
