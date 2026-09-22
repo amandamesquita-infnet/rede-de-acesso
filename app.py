@@ -2,6 +2,13 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 
+@st.cache_data
+def carregar_dados(caminho):
+    return pd.read_csv(
+        caminho,
+        dtype={"codigo_ibge": str}
+    )
+
 
 st.set_page_config(
     page_title="Rede de Acesso",
@@ -127,10 +134,7 @@ arquivo_dados = (
     / "dados_integrados.csv"
 )
 
-df_acesso = pd.read_csv(
-    arquivo_dados,
-    dtype={"codigo_ibge": str}
-)
+df_acesso = carregar_dados(arquivo_dados)
 
 
 # Separa a UF do nome do município
@@ -154,14 +158,21 @@ ufs = sorted(
     .unique()
 )
 
+# Guarda a UF selecionada durante a sessão
+if "uf_selecionada" not in st.session_state:
+    st.session_state["uf_selecionada"] = ufs[0]
+
 uf_selecionada = st.sidebar.selectbox(
     "Selecione uma UF",
-    ufs
+    ufs,
+    key="uf_selecionada"
 )
+
 
 df_uf = df_acesso[
     df_acesso["uf"] == uf_selecionada
 ].copy()
+
 
 municipios = sorted(
     df_uf["municipio_nome"]
@@ -169,9 +180,19 @@ municipios = sorted(
     .unique()
 )
 
+
+# Mantém um município válido quando a UF é alterada
+if (
+    "municipio_selecionado" not in st.session_state
+    or st.session_state["municipio_selecionado"] not in municipios
+):
+    st.session_state["municipio_selecionado"] = municipios[0]
+
+
 municipio_selecionado = st.sidebar.selectbox(
     "Selecione um município",
-    municipios
+    municipios,
+    key="municipio_selecionado"
 )
 
 
