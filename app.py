@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 @st.cache_data
 def carregar_dados(caminho):
@@ -9,6 +11,9 @@ def carregar_dados(caminho):
         dtype={"codigo_ibge": str}
     )
 
+@st.cache_data
+def carregar_noticias(caminho):
+    return pd.read_csv(caminho)
 
 st.set_page_config(
     page_title="Rede de Acesso",
@@ -440,6 +445,161 @@ st.dataframe(
     }
 )
 
+# Notícias coletadas por Web Scraping
+st.markdown("---")
+
+st.header("Conectividade em Destaque")
+
+st.write(
+    """
+    Esta seção apresenta informações coletadas da página de notícias
+    do Ministério das Comunicações por meio de Web Scraping com
+    Beautiful Soup. A coleta é realizada separadamente da aplicação
+    e armazenada em arquivo CSV.
+    """
+)
+
+
+arquivo_noticias = (
+    Path(__file__).parent
+    / "02_data_ingest_understanding"
+    / "data"
+    / "noticias_mcom.csv"
+)
+
+df_noticias = carregar_noticias(
+    arquivo_noticias
+)
+
+
+# Estatísticas básicas
+total_noticias = len(df_noticias)
+
+df_noticias["data"] = pd.to_datetime(
+    df_noticias["data"],
+    format="%d/%m/%Y",
+    errors="coerce"
+)
+
+data_mais_recente = df_noticias["data"].max()
+
+if pd.notna(data_mais_recente):
+    data_mais_recente = data_mais_recente.strftime("%d/%m/%Y")
+else:
+    data_mais_recente = "Não disponível"
+
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.metric(
+        "Notícias coletadas",
+        total_noticias
+    )
+
+with col2:
+    st.metric(
+        "Notícia mais recente",
+        data_mais_recente
+    )
+
+
+# Prepara tabela para exibição
+df_noticias_exibicao = df_noticias.copy()
+
+df_noticias_exibicao["data"] = (
+    df_noticias_exibicao["data"]
+    .dt.strftime("%d/%m/%Y")
+)
+
+df_noticias_exibicao = df_noticias_exibicao.rename(
+    columns={
+        "titulo": "Título",
+        "data": "Data",
+        "resumo": "Resumo",
+        "link": "Link"
+    }
+)
+
+
+st.subheader("Notícias coletadas")
+
+st.dataframe(
+    df_noticias_exibicao,
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        "Título": st.column_config.TextColumn(
+            "Título"
+        ),
+        "Data": st.column_config.TextColumn(
+            "Data"
+        ),
+        "Resumo": st.column_config.TextColumn(
+            "Resumo"
+        ),
+        "Link": st.column_config.LinkColumn(
+            "Acessar notícia",
+            display_text="Abrir"
+        )
+    }
+)
+
+# Nuvem de palavras
+st.subheader("Palavras em destaque")
+
+st.write(
+    """
+    A nuvem abaixo representa os termos mais recorrentes nos títulos
+    e resumos das notícias coletadas. Quanto maior a palavra,
+    maior sua frequência no conjunto de textos.
+    """
+)
+
+
+# Junta títulos e resumos em um único texto
+texto_noticias = " ".join(
+    (
+        df_noticias["titulo"].fillna("")
+        + " "
+        + df_noticias["resumo"].fillna("")
+    )
+)
+
+
+# Palavras comuns que não contribuem para a análise
+stopwords_pt = {
+    "a", "ao", "aos", "as", "com", "como", "da", "das",
+    "de", "do", "dos", "e", "em", "entre", "é", "mais",
+    "na", "nas", "no", "nos", "o", "os", "ou", "para",
+    "pela", "pelas", "pelo", "pelos", "por", "que",
+    "se", "sem", "sobre", "um", "uma", "uns", "umas"
+}
+
+
+nuvem = WordCloud(
+    width=1200,
+    height=500,
+    background_color="white",
+    stopwords=stopwords_pt,
+    collocations=False
+).generate(texto_noticias)
+
+
+fig, ax = plt.subplots(
+    figsize=(12, 5)
+)
+
+ax.imshow(
+    nuvem,
+    interpolation="bilinear"
+)
+
+ax.axis("off")
+
+st.pyplot(fig)
+
+plt.close(fig)
 
 # Rodapé
 st.markdown("---")
