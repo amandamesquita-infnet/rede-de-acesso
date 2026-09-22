@@ -3,6 +3,8 @@ import pandas as pd
 from pathlib import Path
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import re
+from collections import Counter
 
 @st.cache_data
 def carregar_dados(caminho):
@@ -600,6 +602,56 @@ ax.axis("off")
 st.pyplot(fig)
 
 plt.close(fig)
+
+# Frequência das palavras
+st.subheader("Termos mais frequentes")
+
+st.write(
+    """
+    O gráfico apresenta os termos que aparecem com maior frequência
+    nos títulos e resumos das notícias coletadas, desconsiderando
+    palavras comuns da língua portuguesa.
+    """
+)
+
+
+# Separa as palavras do texto
+palavras = re.findall(
+    r"\b[a-záàâãéêíóôõúç]+\b",
+    texto_noticias.lower()
+)
+
+
+# Remove palavras comuns e termos muito curtos
+palavras_filtradas = [
+    palavra
+    for palavra in palavras
+    if palavra not in stopwords_pt
+    and len(palavra) > 2
+]
+
+
+# Conta a frequência
+frequencia = Counter(
+    palavras_filtradas
+)
+
+
+# Seleciona os 15 termos mais frequentes
+df_frequencia = pd.DataFrame(
+    frequencia.most_common(15),
+    columns=[
+        "Termo",
+        "Frequência"
+    ]
+)
+
+
+st.bar_chart(
+    df_frequencia,
+    x="Termo",
+    y="Frequência"
+)
 
 # Rodapé
 st.markdown("---")
