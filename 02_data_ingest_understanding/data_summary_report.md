@@ -180,3 +180,51 @@ Uma possível expansão do projeto é acrescentar dados da **Anatel** relacionad
 Esses indicadores poderiam complementar os dados de acesso à internet e renda já utilizados.
 
 Os dados da Anatel ainda não foram integrados nesta etapa do projeto.
+
+## Atualizações para o TP3
+
+### Fontes de dados
+
+Nesta etapa, não foi necessário incluir uma nova fonte de dados no projeto.
+
+As fontes permanecem:
+
+- IBGE SIDRA, utilizado para obtenção dos indicadores municipais de acesso à internet e renda;
+- Ministério das Comunicações, utilizado para coleta de notícias relacionadas à conectividade por meio de Web Scraping;
+- arquivos CSV enviados pelo usuário, utilizados como fonte complementar de dados.
+
+A estrutura atual já fornece dados quantitativos e textuais suficientes para as funcionalidades desenvolvidas nesta etapa.
+
+### Avaliação do uso de Selenium
+
+Foi avaliada a utilização do Selenium para ampliar a coleta de dados na Web. Entretanto, as fontes atualmente utilizadas não dependem de interação dinâmica com elementos da página.
+
+Os dados do IBGE são obtidos por meio de API, enquanto a página de notícias do Ministério das Comunicações disponibiliza no HTML as informações necessárias para a coleta com Requests e Beautiful Soup.
+
+Por esse motivo, a utilização de Selenium não acrescentaria uma vantagem relevante ao processo atual e introduziria dependências e complexidade adicionais. A coleta com Beautiful Soup foi, portanto, mantida.
+
+### Disponibilização dos dados por API
+
+No TP3, os dados integrados passaram a ser disponibilizados também por meio de uma API desenvolvida com FastAPI.
+
+A API utiliza como fonte a base processada `dados_integrados.csv` e permite:
+
+- consultar os indicadores de um município a partir de seu código IBGE por meio de uma requisição GET;
+- enviar uma lista de códigos IBGE por meio de uma requisição POST para comparar os indicadores dos municípios selecionados.
+
+A FastAPI não representa uma nova fonte de dados. Ela funciona como uma nova camada de acesso aos dados já coletados, tratados e integrados pelo projeto.
+
+### Integração com o Streamlit
+
+A aplicação Streamlit realiza requisições à FastAPI utilizando a biblioteca Requests.
+
+Essa integração permite que a interface consulte os dados por meio dos endpoints da API, demonstrando a separação entre a camada de apresentação da aplicação e a camada responsável por disponibilizar os dados.
+
+### Preparação dos dados para etapa futura com LLM
+
+Os dados disponíveis no projeto apresentam duas estruturas que poderão ser utilizadas futuramente com modelos de linguagem:
+
+- dados estruturados dos municípios, contendo indicadores de acesso à internet e renda;
+- dados textuais provenientes das notícias do Ministério das Comunicações.
+
+Em uma etapa futura, essas informações poderão servir de contexto para a geração de resumos e interpretações descritivas dos indicadores municipais, mantendo o cuidado de não inferir relações causais que não sejam sustentadas pelos dados.
