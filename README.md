@@ -192,7 +192,44 @@ A geração deverá permanecer descritiva, evitando inferir relações causais q
 
 ## Como Executar o Projeto
 
-### 1. Criar o ambiente virtual
+1. Criar o ambiente virtual:
 
 ```bash
 python -m venv .venv
+```
+
+2. Ativar o ambiente virtual:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+3. Instalar as dependências:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+4. Executar a FastAPI:
+
+```bash
+python -m uvicorn api:app --reload
+```
+
+5. Em outro terminal, executar o Streamlit:
+
+```powershell
+.\.venv\Scripts\python.exe -m streamlit run app.py
+```
+
+## Versionamento
+
+O projeto está disponível no GitHub:
+
+https://github.com/amandamesquita-infnet/rede-de-acesso
+
+## Uso de Inteligência Artificial
+
+Uma ferramenta de Inteligência Artificial foi utilizada como apoio durante o desenvolvimento do projeto.
+
+- **ChatGPT - OpenAI, GPT-5.6 Sol:** utilizado como apoio na organização do projeto e identificação e correção de erros.
