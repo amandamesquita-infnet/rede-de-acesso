@@ -2,12 +2,15 @@
 
 ## Visão Geral
 
-Este documento apresenta as principais fontes de dados utilizadas no projeto **Rede de Acesso**, explicando a origem dos dados, as principais variáveis e como cada fonte é utilizada na aplicação.
+Este documento apresenta as principais fontes de dados utilizadas no projeto **Rede de Acesso**, explicando a origem dos dados, suas principais variáveis, os procedimentos de coleta e tratamento e a forma como cada conjunto de dados é utilizado na aplicação.
 
-Nesta etapa, o projeto utiliza dados do Censo Demográfico 2022, obtidos por meio da API SIDRA do IBGE, além de notícias coletadas da página do Ministério das Comunicações por meio de Web Scraping.
+O projeto utiliza dados do Censo Demográfico 2022 obtidos por meio da API SIDRA do IBGE, além de notícias do Ministério das Comunicações coletadas por Web Scraping.
 
-A aplicação também permite que o usuário envie um arquivo CSV com informações complementares sobre os municípios.
+A aplicação também permite que o usuário envie arquivos CSV com informações complementares sobre os municípios.
 
+No TP3, os dados processados passaram a ser disponibilizados por meio de uma API desenvolvida com FastAPI, que é consumida pela interface Streamlit.
+
+---
 
 ## Fontes de Dados
 
@@ -15,13 +18,14 @@ A aplicação também permite que o usuário envie um arquivo CSV com informaç�
 |---|---|---|---|---|
 | IBGE - Censo Demográfico 2022 / SIDRA | Tabela 9936 - Domicílios particulares permanentes ocupados por existência de conexão domiciliar à Internet | 5.570 municípios brasileiros | API SIDRA | Identificar o percentual de domicílios sem conexão domiciliar à internet |
 | IBGE - Censo Demográfico 2022 / SIDRA | Tabela 10295 - Rendimento domiciliar mensal per capita médio e mediano | 5.570 municípios brasileiros | API SIDRA | Representar a dimensão socioeconômica da análise |
-| Ministério das Comunicações | Página de notícias do Ministério das Comunicações | Notícias relacionadas a telecomunicações, internet e conectividade | Web Scraping com Beautiful Soup | Acrescentar informações textuais ao projeto e analisar os termos mais frequentes nas notícias |
+| Ministério das Comunicações | Páginas de notícias do Ministério das Comunicações | Notícias relacionadas a telecomunicações, internet e conectividade | Web Scraping com Requests e Beautiful Soup | Acrescentar informações textuais ao projeto e analisar os termos mais frequentes nas notícias |
 | Arquivo enviado pelo usuário | CSV com dados complementares | Depende do arquivo enviado | Upload pelo Streamlit | Permitir que novas informações sejam associadas aos municípios da base principal |
 
+---
 
 ## Tipos de Dados
 
-O projeto trabalha com dados estruturados, como os dados municipais do IBGE, e também com dados textuais obtidos pelas notícias.
+O projeto trabalha com dados estruturados, como os indicadores municipais do IBGE, e também com dados textuais obtidos a partir das notícias.
 
 | Tipo de dado | Exemplos no projeto | Finalidade |
 |---|---|---|
@@ -34,24 +38,25 @@ O projeto trabalha com dados estruturados, como os dados municipais do IBGE, e t
 | URL | Link da notícia | Permitir acesso ao conteúdo original |
 | Variável | Colunas enviadas pelo usuário | Complementar os dados existentes |
 
+---
 
 ## Finalidade dos Dados
 
 Os dados do IBGE são utilizados para comparar as condições de acesso à internet e renda entre os municípios brasileiros.
 
-O percentual de domicílios sem conexão domiciliar à internet é utilizado como o principal indicador de limitação de acesso digital. A renda mediana domiciliar per capita permite acrescentar uma dimensão socioeconômica à comparação entre os municípios.
+O percentual de domicílios sem conexão domiciliar à internet é utilizado como principal indicador de limitação de acesso digital. A renda mediana domiciliar per capita acrescenta uma dimensão socioeconômica à comparação entre os municípios.
 
-As duas bases são integradas pelo código IBGE do município.
+As duas bases municipais são integradas pelo código IBGE.
 
-As notícias coletadas por Web Scraping complementam os dados numéricos do projeto. A partir dos títulos e resumos das notícias, a aplicação apresenta uma nuvem de palavras e os termos mais frequentes encontrados na coleta.
+As notícias coletadas por Web Scraping complementam os dados numéricos do projeto. A partir de seus títulos e resumos, a aplicação apresenta uma nuvem de palavras e os termos mais frequentes encontrados na coleta.
 
 Além disso, o usuário pode enviar um arquivo CSV com novas informações. Para que essas informações sejam integradas à base principal, o arquivo deve conter a coluna `codigo_ibge`.
 
+---
 
 ## Coleta dos Dados do IBGE
 
 Foram realizadas duas coletas utilizando a API SIDRA do IBGE e dados do Censo Demográfico 2022.
-
 
 ### Acesso à Internet
 
@@ -64,7 +69,6 @@ A base resultante contém:
 - nome do município;
 - percentual de domicílios sem conexão domiciliar à internet.
 
-
 ### Renda
 
 A segunda coleta utilizou a Tabela 10295 para obter o rendimento nominal mediano mensal domiciliar per capita.
@@ -76,155 +80,40 @@ A base resultante contém:
 - nome do município;
 - rendimento mediano domiciliar per capita.
 
-
 ### Integração dos Dados
 
 As duas bases foram integradas por meio do código IBGE do município.
 
 O resultado foi salvo no arquivo:
 
-`dados_integrados.csv`
+`02_data_ingest_understanding/data/dados_integrados.csv`
 
 A base integrada contém os 5.570 municípios brasileiros e não apresenta valores ausentes nas variáveis utilizadas no projeto.
 
+---
 
 ## Coleta por Web Scraping
 
-No TP2, também foi adicionada uma coleta de dados por Web Scraping.
-
-A coleta é realizada na página de notícias do **Ministério das Comunicações**, utilizando as bibliotecas `requests` e `BeautifulSoup`.
+A coleta textual é realizada nas páginas de notícias do **Ministério das Comunicações**, utilizando as bibliotecas `requests` e `BeautifulSoup`.
 
 O processo é executado pelo arquivo:
 
-`coleta_noticias_mcom.py`
+`02_data_ingest_understanding/coleta_noticias_mcom.py`
 
-Para cada notícia são coletados:
+No TP3, o processo de coleta foi revisado e ampliado.
 
-- título;
-- data;
-- resumo;
-- link.
+Foram utilizadas as páginas mensais de:
 
-Na coleta realizada para o projeto, foram obtidas **30 notícias**.
+- outubro de 2026;
+- novembro de 2026.
 
-O resultado é salvo no arquivo:
+O script percorre a paginação de cada mês em blocos de 20 registros e encerra a coleta quando encontra uma página sem novas notícias.
 
-`noticias_mcom.csv`
+Na execução realizada para o projeto foram identificadas:
 
-A coleta é executada separadamente do Streamlit. Dessa forma, o site não precisa ser acessado novamente toda vez que o usuário interage com a aplicação. O aplicativo apenas lê o arquivo CSV gerado anteriormente.
+- 44 notícias referentes a novembro;
+- 45 notícias referentes a outubro.
 
+A coleta final contém **89 notícias**.
 
-## Uso das Notícias na Aplicação
-
-As notícias coletadas são apresentadas em uma seção específica do aplicativo.
-
-A aplicação mostra:
-
-- quantidade de notícias coletadas;
-- data da notícia mais recente;
-- tabela com título, data, resumo e link;
-- nuvem de palavras;
-- gráfico com os termos mais frequentes.
-
-Para a análise textual, palavras muito comuns da língua portuguesa são retiradas para que os termos mais relevantes apareçam com maior destaque.
-
-
-## Dados Complementares Enviados pelo Usuário
-
-A aplicação também permite que o usuário envie um arquivo CSV com informações adicionais sobre os municípios.
-
-O arquivo precisa conter obrigatoriamente a coluna:
-
-`codigo_ibge`
-
-Antes de utilizar os dados, a aplicação verifica se:
-
-- o arquivo pode ser lido;
-- o arquivo possui registros;
-- a coluna `codigo_ibge` está presente;
-- existe pelo menos uma coluna adicional.
-
-Quando o arquivo é válido, as novas informações são associadas à base principal por meio do código IBGE.
-
-Os dados enviados são mantidos no `st.session_state` durante a sessão do usuário.
-
-Também é possível baixar um novo arquivo CSV com os dados da unidade da federação selecionada, incluindo as informações complementares quando elas tiverem sido adicionadas pelo usuário.
-
-
-## Tratamento dos Dados
-
-O código IBGE é mantido como texto para preservar sua função como identificador e facilitar a integração entre as bases.
-
-A unidade da federação é extraída do campo de município e utilizada nos filtros da aplicação.
-
-Na coleta das notícias, possíveis registros duplicados são removidos utilizando o link como referência. As datas também são tratadas antes da ordenação e exibição.
-
-O script de Web Scraping também verifica se alguma notícia foi encontrada antes de gerar o arquivo final.
-
-
-## Limitações
-
-Os dados de acesso à internet e renda utilizados no projeto são referentes ao Censo Demográfico 2022.
-
-As notícias representam o conteúdo disponível na página do Ministério das Comunicações no momento da coleta. Caso a estrutura da página seja alterada, o código de Web Scraping também poderá precisar de ajustes.
-
-Os arquivos enviados pelos usuários podem ter diferentes tipos de informação. Por isso, a aplicação realiza apenas validações básicas e utiliza o código IBGE como chave para integração.
-
-O projeto tem caráter descritivo e comparativo. Portanto, as relações observadas entre renda e acesso à internet não são tratadas como relações de causa e efeito.
-
-
-## Expansões Futuras
-
-Uma possível expansão do projeto é acrescentar dados da **Anatel** relacionados à infraestrutura e à qualidade da conectividade nos municípios.
-
-Esses indicadores poderiam complementar os dados de acesso à internet e renda já utilizados.
-
-Os dados da Anatel ainda não foram integrados nesta etapa do projeto.
-
-## Atualizações para o TP3
-
-### Fontes de dados
-
-Nesta etapa, não foi necessário incluir uma nova fonte de dados no projeto.
-
-As fontes permanecem:
-
-- IBGE SIDRA, utilizado para obtenção dos indicadores municipais de acesso à internet e renda;
-- Ministério das Comunicações, utilizado para coleta de notícias relacionadas à conectividade por meio de Web Scraping;
-- arquivos CSV enviados pelo usuário, utilizados como fonte complementar de dados.
-
-A estrutura atual já fornece dados quantitativos e textuais suficientes para as funcionalidades desenvolvidas nesta etapa.
-
-### Avaliação do uso de Selenium
-
-Foi avaliada a utilização do Selenium para ampliar a coleta de dados na Web. Entretanto, as fontes atualmente utilizadas não dependem de interação dinâmica com elementos da página.
-
-Os dados do IBGE são obtidos por meio de API, enquanto a página de notícias do Ministério das Comunicações disponibiliza no HTML as informações necessárias para a coleta com Requests e Beautiful Soup.
-
-Por esse motivo, a utilização de Selenium não acrescentaria uma vantagem relevante ao processo atual e introduziria dependências e complexidade adicionais. A coleta com Beautiful Soup foi, portanto, mantida.
-
-### Disponibilização dos dados por API
-
-No TP3, os dados integrados passaram a ser disponibilizados também por meio de uma API desenvolvida com FastAPI.
-
-A API utiliza como fonte a base processada `dados_integrados.csv` e permite:
-
-- consultar os indicadores de um município a partir de seu código IBGE por meio de uma requisição GET;
-- enviar uma lista de códigos IBGE por meio de uma requisição POST para comparar os indicadores dos municípios selecionados.
-
-A FastAPI não representa uma nova fonte de dados. Ela funciona como uma nova camada de acesso aos dados já coletados, tratados e integrados pelo projeto.
-
-### Integração com o Streamlit
-
-A aplicação Streamlit realiza requisições à FastAPI utilizando a biblioteca Requests.
-
-Essa integração permite que a interface consulte os dados por meio dos endpoints da API, demonstrando a separação entre a camada de apresentação da aplicação e a camada responsável por disponibilizar os dados.
-
-### Preparação dos dados para etapa futura com LLM
-
-Os dados disponíveis no projeto apresentam duas estruturas que poderão ser utilizadas futuramente com modelos de linguagem:
-
-- dados estruturados dos municípios, contendo indicadores de acesso à internet e renda;
-- dados textuais provenientes das notícias do Ministério das Comunicações.
-
-Em uma etapa futura, essas informações poderão servir de contexto para a geração de resumos e interpretações descritivas dos indicadores municipais, mantendo o cuidado de não inferir relações causais que não sejam sustentadas pelos dados.
+Para cada notícia são

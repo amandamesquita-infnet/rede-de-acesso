@@ -41,7 +41,7 @@ O projeto Rede de Acesso contempla:
 - integração das bases utilizando o código IBGE dos municípios;
 - comparação dos indicadores entre municípios e unidades da federação;
 - desenvolvimento de filtros interativos para exploração dos dados;
-- coleta de notícias por Web Scraping utilizando Beautiful Soup;
+- coleta de notícias por Web Scraping utilizando Requests e Beautiful Soup;
 - análise textual das notícias por meio de nuvem de palavras e frequência de termos;
 - upload de arquivos CSV com informações complementares;
 - integração dos dados enviados pelo usuário à base principal;
@@ -50,7 +50,9 @@ O projeto Rede de Acesso contempla:
 - utilização de Git e GitHub para controle de versão do projeto;
 - organização da aplicação em múltiplas páginas com navegação entre funcionalidades;
 - desenvolvimento de uma API com FastAPI para disponibilização dos dados processados;
-- integração entre a aplicação Streamlit e a API desenvolvida.
+- integração entre a aplicação Streamlit e a API desenvolvida;
+- centralização das requisições HTTP realizadas pelo Streamlit;
+- tratamento da indisponibilidade temporária da API.
 
 O projeto possui caráter descritivo e comparativo. Nesta etapa, não busca estabelecer relações de causa e efeito entre renda e acesso à internet.
 
@@ -68,7 +70,7 @@ A aplicação pode auxiliar na comparação de indicadores entre municípios e n
 
 ## Stakeholders
 
-- Gestores públicos;
+- gestores públicos;
 - analistas de políticas públicas;
 - órgãos relacionados à inclusão digital e telecomunicações;
 - organizações ligadas ao desenvolvimento social;
@@ -85,7 +87,8 @@ A aplicação pode auxiliar na comparação de indicadores entre municípios e n
 | Incorporar uma dimensão socioeconômica | Presença de indicador de renda mediana per capita |
 | Possibilitar análise territorial | Filtros por unidade da federação e município |
 | Disponibilizar os resultados de forma interativa | Aplicação funcional desenvolvida em Streamlit |
-| Incorporar uma nova fonte de dados | Coleta de notícias por Web Scraping com Beautiful Soup |
+| Incorporar uma nova fonte de dados | Coleta de notícias por Web Scraping com Requests e Beautiful Soup |
+| Ampliar a coleta textual | Coleta de notícias de outubro e novembro de 2026 com tratamento de paginação |
 | Apresentar informações obtidas no Web Scraping | Tabela de notícias, nuvem de palavras e frequência de termos |
 | Permitir a entrada de novos dados | Upload de arquivo CSV com validação e integração pelo código IBGE |
 | Permitir a saída dos dados processados | Download dos dados filtrados em formato CSV |
@@ -93,6 +96,8 @@ A aplicação pode auxiliar na comparação de indicadores entre municípios e n
 | Organizar as funcionalidades da aplicação | Navegação entre múltiplas páginas no Streamlit |
 | Disponibilizar os dados processados por API | API FastAPI funcional com endpoints GET e POST |
 | Integrar a aplicação à API | Consultas à FastAPI realizadas diretamente pela aplicação Streamlit |
+| Reduzir acoplamento entre interface e dados | Chamadas HTTP centralizadas em `src/cliente_api.py` |
+| Melhorar a robustez da interface | Mensagem amigável quando a FastAPI está indisponível |
 
 ---
 
@@ -106,6 +111,8 @@ O projeto está principalmente relacionado ao ODS 9 por analisar diferenças no 
 
 O projeto também se relaciona ao ODS 10 por comparar o acesso à internet com indicadores de renda. Diferenças no acesso às tecnologias digitais podem estar associadas a desigualdades no acesso a informações, serviços e oportunidades.
 
+---
+
 ## Atualizações para o TP3
 
 ### Reavaliação do problema de negócio
@@ -114,7 +121,7 @@ O problema de negócio permanece:
 
 > Quais municípios brasileiros apresentam maiores limitações de acesso digital e como essa condição se relaciona com indicadores de renda?
 
-A inclusão de novas tecnologias no TP3 não altera o problema central do projeto. As mudanças feitas ampliam a forma de acesso e organização das informações do projeto, permitindo que os dados processados também sejam consultados por meio de uma API.
+A inclusão das novas tecnologias no TP3 não altera o problema central do projeto. As mudanças realizadas ampliam a forma de organização, disponibilização e consumo das informações, mantendo o foco nos indicadores de inclusão digital e renda.
 
 ### Evolução da aplicação
 
@@ -126,18 +133,26 @@ As funcionalidades foram distribuídas entre páginas específicas para:
 - análise dos indicadores municipais;
 - exploração das notícias coletadas;
 - upload e download de dados complementares;
-- integração com a API do projeto.
+- integração e testes da API.
 
-Também desenvolvemos uma API com FastAPI para disponibilizar os indicadores processados de forma estruturada. A API possui endpoints para consulta individual de municípios e comparação entre municípios e foi integrada à aplicação Streamlit.
+Também foi desenvolvida uma API com FastAPI para disponibilizar os dados processados de forma estruturada.
 
-### Avaliação do uso de Selenium
+A API possui endpoints para:
 
-Analisamos a necessidade de utilização do Selenium para a coleta de dados. Mas, as fontes atualmente utilizadas pelo projeto não exigem interação dinâmica com páginas web. Os indicadores do IBGE são obtidos por meio de API, enquanto as notícias do Ministério das Comunicações podem ser coletadas diretamente do HTML da página utilizando Requests e Beautiful Soup.
+- verificar o funcionamento do serviço;
+- listar os municípios disponíveis;
+- consultar um município por código IBGE;
+- disponibilizar as notícias coletadas;
+- comparar municípios por meio de uma requisição POST.
 
-Por esse motivo, o Selenium não foi usado nesta etapa. Com isso, tentamos manter o processo de coleta mais simples e reduzir dependências e fragilidade desnecessárias, utilizando cada tecnologia de acordo com a característica da fonte de dados.
+A interface Streamlit passou a consumir esses dados pela FastAPI, reduzindo o acesso direto das páginas aos arquivos internos do projeto.
 
-### Preparação para uso futuro de LLM
+As chamadas HTTP foram centralizadas no arquivo:
 
-Em uma etapa futura, pretendo integrar um modelo de linguagem ao projeto para gerar resumos interpretativos dos indicadores de um município selecionado. O modelo poderá usar informações como percentual de domicílios sem acesso à internet, renda mediana per capita e comparação com os indicadores da respectiva unidade da federação para produzir uma síntese textual dos dados.
+`src/cliente_api.py`
 
-A geração deverá seguir descritiva, evitando atribuir relações causais que não possam ser demonstradas pelos dados disponíveis.
+A estrutura adotada pode ser representada de forma simplificada como:
+
+`Streamlit → cliente_api.py → FastAPI → dados processados`
+
+### Configuração da API
