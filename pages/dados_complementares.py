@@ -1,14 +1,7 @@
 import streamlit as st
 import pandas as pd
-from pathlib import Path
 
-
-@st.cache_data
-def carregar_dados(caminho):
-    return pd.read_csv(
-        caminho,
-        dtype={"codigo_ibge": str}
-    )
+from src.cliente_api import listar_municipios
 
 
 st.title("Dados Complementares")
@@ -24,16 +17,11 @@ st.write(
 )
 
 
-# Base principal
-arquivo_dados = (
-    Path(__file__).parent.parent
-    / "02_data_ingest_understanding"
-    / "data"
-    / "dados_integrados.csv"
-)
+# Base principal recebida pela FastAPI
+dados_api = listar_municipios()
 
-df_acesso = carregar_dados(
-    arquivo_dados
+df_acesso = pd.DataFrame(
+    dados_api["municipios"]
 )
 
 
