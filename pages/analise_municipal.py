@@ -1,7 +1,9 @@
 import streamlit as st
 import pandas as pd
+import requests
 
 from src.cliente_api import listar_municipios
+
 
 st.title("Análise Municipal")
 
@@ -14,8 +16,21 @@ st.write(
 )
 
 
-dados_api = listar_municipios()
-df_acesso = pd.DataFrame(dados_api["municipios"])
+# Consulta os dados pela FastAPI
+try:
+    dados_api = listar_municipios()
+
+except requests.exceptions.RequestException:
+    st.error(
+        "Não foi possível conectar à API. "
+        "Verifique se a FastAPI está em execução."
+    )
+    st.stop()
+
+
+df_acesso = pd.DataFrame(
+    dados_api["municipios"]
+)
 
 
 # Separa UF e nome do município
@@ -43,6 +58,7 @@ if "dados_upload" in st.session_state:
 # Filtros
 st.sidebar.markdown("---")
 st.sidebar.subheader("Filtros da Análise")
+
 
 ufs = sorted(
     df_acesso["uf"]
@@ -107,6 +123,7 @@ media_sem_internet_uf = (
     df_uf["percentual_sem_internet"].mean()
 )
 
+
 mediana_renda_uf = (
     df_uf["renda_mediana_per_capita"].median()
 )
@@ -114,11 +131,13 @@ mediana_renda_uf = (
 
 col1, col2, col3, col4 = st.columns(4)
 
+
 with col1:
     st.metric(
         "Domicílios sem internet",
         f"{dados_municipio['percentual_sem_internet']:.2f}%"
     )
+
 
 with col2:
     st.metric(
@@ -126,11 +145,13 @@ with col2:
         f"{media_sem_internet_uf:.2f}%"
     )
 
+
 with col3:
     st.metric(
         "Renda mediana per capita",
         f"R$ {dados_municipio['renda_mediana_per_capita']:.2f}"
     )
+
 
 with col4:
     st.metric(
@@ -146,6 +167,7 @@ st.markdown("---")
 st.subheader(
     f"Municípios de {uf_selecionada}"
 )
+
 
 df_uf_exibicao = (
     df_uf[
@@ -169,6 +191,7 @@ df_uf_exibicao = (
         }
     )
 )
+
 
 st.dataframe(
     df_uf_exibicao,
@@ -199,12 +222,14 @@ st.markdown("---")
 # Panorama nacional
 st.subheader("Panorama Nacional")
 
+
 st.write(
     """
     Municípios com os maiores percentuais de domicílios
     sem conexão domiciliar à internet.
     """
 )
+
 
 df_nacional = (
     df_acesso[
@@ -229,6 +254,7 @@ df_nacional = (
         }
     )
 )
+
 
 st.dataframe(
     df_nacional,

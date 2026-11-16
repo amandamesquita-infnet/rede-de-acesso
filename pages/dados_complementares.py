@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import requests
 
 from src.cliente_api import listar_municipios
 
@@ -18,7 +19,16 @@ st.write(
 
 
 # Base principal recebida pela FastAPI
-dados_api = listar_municipios()
+try:
+    dados_api = listar_municipios()
+
+except requests.exceptions.RequestException:
+    st.error(
+        "Não foi possível conectar à API. "
+        "Verifique se a FastAPI está em execução."
+    )
+    st.stop()
+
 
 df_acesso = pd.DataFrame(
     dados_api["municipios"]

@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import requests
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import re
@@ -20,7 +21,16 @@ st.write(
 
 
 # Dados recebidos pela FastAPI
-dados_api = listar_noticias()
+try:
+    dados_api = listar_noticias()
+
+except requests.exceptions.RequestException:
+    st.error(
+        "Não foi possível conectar à API. "
+        "Verifique se a FastAPI está em execução."
+    )
+    st.stop()
+
 
 df_noticias = pd.DataFrame(
     dados_api["noticias"]
@@ -37,25 +47,38 @@ df_noticias["data"] = pd.to_datetime(
 
 # Indicadores
 total_noticias = len(df_noticias)
+
 data_mais_recente = df_noticias["data"].max()
 
+
 if pd.notna(data_mais_recente):
-    data_mais_recente_formatada = data_mais_recente.strftime(
-        "%d/%m/%Y"
+
+    data_mais_recente_formatada = (
+        data_mais_recente.strftime(
+            "%d/%m/%Y"
+        )
     )
+
 else:
-    data_mais_recente_formatada = "Não disponível"
+
+    data_mais_recente_formatada = (
+        "Não disponível"
+    )
 
 
 col1, col2 = st.columns(2)
 
+
 with col1:
+
     st.metric(
         "Notícias coletadas",
         total_noticias
     )
 
+
 with col2:
+
     st.metric(
         "Notícia mais recente",
         data_mais_recente_formatada
@@ -68,12 +91,15 @@ st.markdown("---")
 # Tabela de notícias
 st.subheader("Notícias coletadas")
 
+
 df_exibicao = df_noticias.copy()
+
 
 df_exibicao["data"] = (
     df_exibicao["data"]
     .dt.strftime("%d/%m/%Y")
 )
+
 
 df_exibicao = df_exibicao.rename(
     columns={
@@ -83,6 +109,7 @@ df_exibicao = df_exibicao.rename(
         "link": "Link"
     }
 )
+
 
 st.dataframe(
     df_exibicao,
@@ -131,29 +158,40 @@ stopwords_pt = {
 # Nuvem de palavras
 st.subheader("Palavras em destaque")
 
+
 nuvem = WordCloud(
     width=1200,
     height=500,
     background_color="white",
     stopwords=stopwords_pt,
     collocations=False
-).generate(texto_noticias)
+).generate(
+    texto_noticias
+)
 
 
 fig, ax = plt.subplots(
     figsize=(12, 5)
 )
 
+
 ax.imshow(
     nuvem,
     interpolation="bilinear"
 )
 
+
 ax.axis("off")
 
-st.pyplot(fig)
 
-plt.close(fig)
+st.pyplot(
+    fig
+)
+
+
+plt.close(
+    fig
+)
 
 
 st.markdown("---")
@@ -162,10 +200,12 @@ st.markdown("---")
 # Frequência
 st.subheader("Termos mais frequentes")
 
+
 palavras = re.findall(
     r"\b[a-záàâãéêíóôõúç]+\b",
     texto_noticias.lower()
 )
+
 
 palavras_filtradas = [
     palavra
@@ -174,9 +214,11 @@ palavras_filtradas = [
     and len(palavra) > 2
 ]
 
+
 frequencia = Counter(
     palavras_filtradas
 )
+
 
 df_frequencia = pd.DataFrame(
     frequencia.most_common(15),
@@ -185,6 +227,7 @@ df_frequencia = pd.DataFrame(
         "Frequência"
     ]
 )
+
 
 st.bar_chart(
     df_frequencia,
