@@ -1,6 +1,9 @@
 import streamlit as st
 import requests
 
+from config import API_URL
+from src.cliente_api import consultar_municipio
+
 
 st.title("Integração com a API")
 
@@ -10,8 +13,6 @@ st.write(
     com a API desenvolvida em FastAPI para o projeto Rede de Acesso.
     """
 )
-
-from config import API_URL
 
 
 # Status da API
@@ -62,41 +63,34 @@ codigo_ibge = st.text_input(
 if st.button("Consultar município"):
 
     try:
-        resposta = requests.get(
-            f"{API_URL}/municipios/{codigo_ibge}",
-            timeout=5
+        dados = consultar_municipio(codigo_ibge)
+
+        st.success(
+            f"Município encontrado: {dados['municipio']}"
         )
 
-        if resposta.status_code == 200:
+        col1, col2 = st.columns(2)
 
-            dados = resposta.json()
-
-            st.success(
-                f"Município encontrado: {dados['municipio']}"
+        with col1:
+            st.metric(
+                "Domicílios sem internet",
+                f"{dados['percentual_sem_internet']:.2f}%"
             )
 
-            col1, col2 = st.columns(2)
+        with col2:
+            st.metric(
+                "Renda mediana per capita",
+                f"R$ {dados['renda_mediana_per_capita']:.2f}"
+            )
 
-            with col1:
-                st.metric(
-                    "Domicílios sem internet",
-                    f"{dados['percentual_sem_internet']:.2f}%"
-                )
+        st.json(dados)
 
-            with col2:
-                st.metric(
-                    "Renda mediana per capita",
-                    f"R$ {dados['renda_mediana_per_capita']:.2f}"
-                )
-
-            st.json(dados)
-
-        elif resposta.status_code == 404:
+    except requests.exceptions.HTTPError as erro:
+        if erro.response.status_code == 404:
             st.warning("Município não encontrado.")
-
         else:
             st.error(
-                f"Erro na consulta: {resposta.status_code}"
+                f"Erro na consulta: {erro.response.status_code}"
             )
 
     except requests.exceptions.RequestException:
