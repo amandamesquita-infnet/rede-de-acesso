@@ -24,3 +24,14 @@ def comparar_municipios(codigos_ibge):
     resposta.raise_for_status()
 
     return resposta.json()
+
+
+def verificar_status_api():
+    resposta = requests.get(
+        f"{API_URL}/",
+        timeout=5
+    )
+
+    resposta.raise_for_status()
+
+    return resposta.json()

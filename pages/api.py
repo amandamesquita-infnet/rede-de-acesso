@@ -1,8 +1,11 @@
 import streamlit as st
 import requests
 
-from config import API_URL
-from src.cliente_api import consultar_municipio, comparar_municipios
+from src.cliente_api import (
+    verificar_status_api,
+    consultar_municipio,
+    comparar_municipios,
+)
 
 
 st.title("Integração com a API")
@@ -21,19 +24,10 @@ st.subheader("Status da API")
 if st.button("Verificar conexão"):
 
     try:
-        resposta = requests.get(
-            f"{API_URL}/",
-            timeout=5
-        )
+        dados = verificar_status_api()
 
-        if resposta.status_code == 200:
-            st.success("API conectada com sucesso.")
-            st.json(resposta.json())
-
-        else:
-            st.error(
-                f"Erro na API: {resposta.status_code}"
-            )
+        st.success("API conectada com sucesso.")
+        st.json(dados)
 
     except requests.exceptions.RequestException:
         st.error(
