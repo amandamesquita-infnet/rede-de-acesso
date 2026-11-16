@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 from config import API_URL
-from src.cliente_api import consultar_municipio
+from src.cliente_api import consultar_municipio, comparar_municipios
 
 
 st.title("Integração com a API")
@@ -130,35 +130,27 @@ with col2:
 if st.button("Comparar municípios"):
 
     try:
-        resposta = requests.post(
-            f"{API_URL}/comparacao",
-            json={
-                "codigos_ibge": [
-                    codigo_1,
-                    codigo_2
-                ]
-            },
-            timeout=5
+        dados = comparar_municipios(
+            [
+                codigo_1,
+                codigo_2
+            ]
         )
 
-        if resposta.status_code == 200:
+        st.success(
+            f"{dados['quantidade']} municípios retornados."
+        )
 
-            dados = resposta.json()
+        st.dataframe(
+            dados["municipios"],
+            use_container_width=True,
+            hide_index=True
+        )
 
-            st.success(
-                f"{dados['quantidade']} municípios retornados."
-            )
-
-            st.dataframe(
-                dados["municipios"],
-                use_container_width=True,
-                hide_index=True
-            )
-
-        else:
-            st.error(
-                f"Erro na consulta: {resposta.status_code}"
-            )
+    except requests.exceptions.HTTPError as erro:
+        st.error(
+            f"Erro na consulta: {erro.response.status_code}"
+        )
 
     except requests.exceptions.RequestException:
         st.error(

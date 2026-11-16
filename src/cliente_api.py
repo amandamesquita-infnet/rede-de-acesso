@@ -11,3 +11,16 @@ def consultar_municipio(codigo_ibge):
     resposta.raise_for_status()
 
     return resposta.json()
+
+def comparar_municipios(codigos_ibge):
+    resposta = requests.post(
+        f"{API_URL}/comparacao",
+        json={
+            "codigos_ibge": codigos_ibge
+        },
+        timeout=10
+    )
+
+    resposta.raise_for_status()
+
+    return resposta.json()
