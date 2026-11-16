@@ -6,8 +6,11 @@ from urllib.parse import urljoin
 import re
 
 
-# Página de notícias do Ministério das Comunicações
-url = "https://www.gov.br/mcom/pt-br/noticias/ultimas-noticias"
+# Páginas mensais de notícias do Ministério das Comunicações
+urls_meses = [
+    "https://www.gov.br/mcom/pt-br/noticias/2026/novembro",
+    "https://www.gov.br/mcom/pt-br/noticias/2026/outubro",
+]
 
 
 headers = {
@@ -18,111 +21,166 @@ headers = {
 }
 
 
-# Faz a requisição
-resposta = requests.get(
-    url,
-    headers=headers,
-    timeout=30
-)
-
-resposta.raise_for_status()
-
-
-# Interpreta o HTML
-soup = BeautifulSoup(
-    resposta.text,
-    "html.parser"
-)
-
-
 noticias = []
 
 
-# Procura os títulos das notícias
-for titulo_tag in soup.find_all("h2"):
+def obter_data_publicacao(link):
+    """
+    Acessa a página individual da notícia e busca
+    a data original de publicação.
+    """
 
-    link_tag = titulo_tag.find(
-        "a",
-        href=True
-    )
-
-    if link_tag is None:
-        continue
-
-
-    titulo = link_tag.get_text(
-        " ",
-        strip=True
-    )
-
-
-    link = urljoin(
-        url,
-        link_tag["href"]
-    )
-
-
-    if not titulo:
-        continue
-
-
-    # O resumo aparece logo após o título
-    resumo_tag = titulo_tag.find_next("p")
-
-    if resumo_tag is not None:
-        resumo = resumo_tag.get_text(
-            " ",
-            strip=True
+    try:
+        resposta = requests.get(
+            link,
+            headers=headers,
+            timeout=30
         )
-    else:
-        resumo = ""
 
+        resposta.raise_for_status()
 
-    # Procura a data depois do título
-    data = None
+        soup = BeautifulSoup(
+            resposta.text,
+            "html.parser"
+        )
 
-    elemento = titulo_tag
+        bloco_data = soup.find(
+            "span",
+            class_="documentPublished"
+        )
 
-    for _ in range(15):
+        if bloco_data is None:
+            return None
 
-        elemento = elemento.find_next()
+        valor_data = bloco_data.find(
+            "span",
+            class_="value"
+        )
 
-        if elemento is None:
-            break
+        if valor_data is None:
+            return None
 
-        # Interrompe se chegar ao próximo título
-        if elemento.name == "h2":
-            break
-
-        texto_elemento = elemento.get_text(
+        texto_data = valor_data.get_text(
             " ",
             strip=True
         )
 
         resultado = re.search(
-            r"publicado\s+(\d{2}/\d{2}/\d{4})",
-            texto_elemento,
-            flags=re.IGNORECASE
+            r"\d{2}/\d{2}/\d{4}",
+            texto_data
         )
 
         if resultado:
+            return resultado.group()
 
-            data = resultado.group(1)
+        return None
 
+    except requests.RequestException:
+        return None
+
+
+# Percorre cada mês selecionado
+for url_base in urls_meses:
+
+    print(
+        f"\nColetando mês: {url_base}"
+    )
+
+    inicio = 0
+
+    while True:
+
+        # A primeira página não precisa do parâmetro de paginação
+        if inicio == 0:
+            url_pagina = url_base
+        else:
+            url_pagina = (
+                f"{url_base}?b_start:int={inicio}"
+            )
+
+        resposta = requests.get(
+            url_pagina,
+            headers=headers,
+            timeout=30
+        )
+
+        resposta.raise_for_status()
+
+        soup = BeautifulSoup(
+            resposta.text,
+            "html.parser"
+        )
+
+        artigos = soup.find_all(
+            "article",
+            class_="entry"
+        )
+
+        # Quando não houver mais notícias, encerra o mês
+        if len(artigos) == 0:
             break
 
-
-    # Só adiciona a notícia quando encontra a data
-    if data is not None:
-
-        noticias.append(
-            {
-                "titulo": titulo,
-                "data": data,
-                "resumo": resumo,
-                "link": link
-            }
+        print(
+            f"Página iniciada em {inicio}: "
+            f"{len(artigos)} notícias"
         )
+
+        for artigo in artigos:
+
+            link_tag = artigo.select_one(
+                "span.summary a[href]"
+            )
+
+            if link_tag is None:
+                continue
+
+            titulo = link_tag.get_text(
+                " ",
+                strip=True
+            )
+
+            link = urljoin(
+                url_base,
+                link_tag["href"]
+            )
+
+            resumo_tag = artigo.select_one(
+                "p.description.discreet"
+            )
+
+            if resumo_tag is not None:
+                resumo = resumo_tag.get_text(
+                    " ",
+                    strip=True
+                )
+            else:
+                resumo = ""
+
+            # A listagem mostra a última modificação.
+            # Por isso, a data de publicação é buscada
+            # na página individual da notícia.
+            data = obter_data_publicacao(
+                link
+            )
+
+            if data is None:
+                print(
+                    "Data de publicação não encontrada:",
+                    titulo
+                )
+                continue
+
+            noticias.append(
+                {
+                    "titulo": titulo,
+                    "data": data,
+                    "resumo": resumo,
+                    "link": link
+                }
+            )
+
+        # Cada página do portal possui até 20 notícias
+        inicio += 20
 
 
 # Cria o DataFrame
@@ -137,22 +195,20 @@ df_noticias = pd.DataFrame(
 )
 
 
-# Interrompe com uma mensagem clara se nada for encontrado
 if df_noticias.empty:
-
     raise RuntimeError(
         "Nenhuma notícia foi encontrada. "
-        "A estrutura da página pode ter sido alterada."
+        "A estrutura das páginas pode ter sido alterada."
     )
 
 
-# Remove registros duplicados
+# Evita registros duplicados
 df_noticias = df_noticias.drop_duplicates(
     subset=["link"]
 )
 
 
-# Converte a data
+# Converte a coluna de data
 df_noticias["data"] = pd.to_datetime(
     df_noticias["data"],
     format="%d/%m/%Y",
@@ -160,27 +216,30 @@ df_noticias["data"] = pd.to_datetime(
 )
 
 
-# Remove registros sem data válida
 df_noticias = df_noticias.dropna(
     subset=["data"]
 )
 
 
-# Ordena das mais recentes para as mais antigas
+# Ordena da notícia mais recente para a mais antiga
 df_noticias = df_noticias.sort_values(
     by="data",
     ascending=False
 )
 
 
-# Formata novamente para o CSV
+# Retorna a data para o formato usado no projeto
 df_noticias["data"] = (
     df_noticias["data"]
     .dt.strftime("%d/%m/%Y")
 )
 
 
-# Exibe uma amostra
+print(
+    "\n=== AMOSTRA DAS NOTÍCIAS ==="
+)
+
+
 print(
     df_noticias.head(10).to_string(
         index=False
@@ -189,12 +248,12 @@ print(
 
 
 print(
-    "\nQuantidade de notícias coletadas:",
+    "\nQuantidade total de notícias coletadas:",
     len(df_noticias)
 )
 
 
-# Pasta de saída
+# Define o local de saída
 pasta_dados = (
     Path(__file__).parent
     / "data"
@@ -212,7 +271,7 @@ arquivo_saida = (
 )
 
 
-# Salva o arquivo
+# Salva a base atualizada
 df_noticias.to_csv(
     arquivo_saida,
     index=False,
