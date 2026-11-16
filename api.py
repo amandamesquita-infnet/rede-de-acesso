@@ -7,8 +7,8 @@ from pathlib import Path
 app = FastAPI(
     title="Rede de Acesso API",
     description=(
-        "API para consulta de indicadores de acesso à internet "
-        "e renda dos municípios brasileiros."
+        "API para consulta de indicadores de acesso à internet, "
+        "renda e notícias relacionadas à conectividade no Brasil."
     ),
     version="1.0.0"
 )
@@ -20,6 +20,15 @@ CAMINHO_DADOS = (
     / "02_data_ingest_understanding"
     / "data"
     / "dados_integrados.csv"
+)
+
+
+# Caminho da base de notícias
+CAMINHO_NOTICIAS = (
+    Path(__file__).parent
+    / "02_data_ingest_understanding"
+    / "data"
+    / "noticias_mcom.csv"
 )
 
 
@@ -41,6 +50,22 @@ def inicio():
         "status": "API disponível",
         "documentacao": "/docs"
     }
+
+
+@app.get("/noticias")
+def listar_noticias():
+
+    df = pd.read_csv(CAMINHO_NOTICIAS)
+
+    noticias = df.to_dict(
+        orient="records"
+    )
+
+    return {
+        "quantidade": len(noticias),
+        "noticias": noticias
+    }
+
 
 @app.get("/municipios")
 def listar_municipios():
@@ -68,6 +93,7 @@ def listar_municipios():
         "quantidade": len(municipios),
         "municipios": municipios
     }
+
 
 @app.get("/municipios/{codigo_ibge}")
 def consultar_municipio(codigo_ibge: str):

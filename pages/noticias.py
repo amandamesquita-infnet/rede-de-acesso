@@ -1,15 +1,11 @@
 import streamlit as st
 import pandas as pd
-from pathlib import Path
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import re
 from collections import Counter
 
-
-@st.cache_data
-def carregar_noticias(caminho):
-    return pd.read_csv(caminho)
+from src.cliente_api import listar_noticias
 
 
 st.title("Notícias e Conectividade")
@@ -23,16 +19,11 @@ st.write(
 )
 
 
-# Caminho do arquivo gerado pelo scraping
-arquivo_noticias = (
-    Path(__file__).parent.parent
-    / "02_data_ingest_understanding"
-    / "data"
-    / "noticias_mcom.csv"
-)
+# Dados recebidos pela FastAPI
+dados_api = listar_noticias()
 
-df_noticias = carregar_noticias(
-    arquivo_noticias
+df_noticias = pd.DataFrame(
+    dados_api["noticias"]
 )
 
 

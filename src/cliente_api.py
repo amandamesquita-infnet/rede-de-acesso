@@ -45,3 +45,13 @@ def listar_municipios():
     resposta.raise_for_status()
 
     return resposta.json()
+
+def listar_noticias():
+    resposta = requests.get(
+        f"{API_URL}/noticias",
+        timeout=10
+    )
+
+    resposta.raise_for_status()
+
+    return resposta.json()
