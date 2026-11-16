@@ -7,7 +7,8 @@ import re
 
 
 # Página de notícias do Ministério das Comunicações
-url = "https://www.gov.br/mcom/pt-br/assuntos/noticias"
+url = "https://www.gov.br/mcom/pt-br/noticias/ultimas-noticias"
+
 
 headers = {
     "User-Agent": (
@@ -48,53 +49,70 @@ for titulo_tag in soup.find_all("h2"):
     if link_tag is None:
         continue
 
+
     titulo = link_tag.get_text(
         " ",
         strip=True
     )
+
 
     link = urljoin(
         url,
         link_tag["href"]
     )
 
+
     if not titulo:
         continue
 
 
-    # Procura a data e o resumo no bloco
-    # que contém a notícia
-    bloco = titulo_tag
+    # O resumo aparece logo após o título
+    resumo_tag = titulo_tag.find_next("p")
 
+    if resumo_tag is not None:
+        resumo = resumo_tag.get_text(
+            " ",
+            strip=True
+        )
+    else:
+        resumo = ""
+
+
+    # Procura a data depois do título
     data = None
-    resumo = None
 
-    for _ in range(6):
+    elemento = titulo_tag
 
-        bloco = bloco.parent
+    for _ in range(15):
 
-        if bloco is None:
+        elemento = elemento.find_next()
+
+        if elemento is None:
             break
 
-        texto_bloco = bloco.get_text(
+        # Interrompe se chegar ao próximo título
+        if elemento.name == "h2":
+            break
+
+        texto_elemento = elemento.get_text(
             " ",
             strip=True
         )
 
         resultado = re.search(
-            r"(\d{2}/\d{2}/\d{4})\s*-\s*(.+)",
-            texto_bloco
+            r"publicado\s+(\d{2}/\d{2}/\d{4})",
+            texto_elemento,
+            flags=re.IGNORECASE
         )
 
         if resultado:
 
             data = resultado.group(1)
 
-            resumo = resultado.group(2).strip()
-
             break
 
 
+    # Só adiciona a notícia quando encontra a data
     if data is not None:
 
         noticias.append(
@@ -107,7 +125,7 @@ for titulo_tag in soup.find_all("h2"):
         )
 
 
-# Cria o DataFrame já definindo as colunas
+# Cria o DataFrame
 df_noticias = pd.DataFrame(
     noticias,
     columns=[
@@ -142,6 +160,12 @@ df_noticias["data"] = pd.to_datetime(
 )
 
 
+# Remove registros sem data válida
+df_noticias = df_noticias.dropna(
+    subset=["data"]
+)
+
+
 # Ordena das mais recentes para as mais antigas
 df_noticias = df_noticias.sort_values(
     by="data",
@@ -163,6 +187,7 @@ print(
     )
 )
 
+
 print(
     "\nQuantidade de notícias coletadas:",
     len(df_noticias)
@@ -174,6 +199,7 @@ pasta_dados = (
     Path(__file__).parent
     / "data"
 )
+
 
 pasta_dados.mkdir(
     exist_ok=True
