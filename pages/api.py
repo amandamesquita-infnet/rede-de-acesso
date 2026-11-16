@@ -11,7 +11,7 @@ st.write(
     """
 )
 
-API_URL = "http://127.0.0.1:8000"
+from config import API_URL
 
 
 # Status da API
