@@ -4,11 +4,11 @@ Radar de Inclusão Digital e Conectividade nos Municípios Brasileiros.
 
 ## Sobre o Projeto
 
-O projeto **Rede de Acesso** busca reunir e apresentar dados relacionados ao acesso à internet e à renda nos municípios brasileiros.
+O projeto **Rede de Acesso** reúne e apresenta dados relacionados ao acesso à internet e à renda nos municípios brasileiros.
 
-A aplicação foi desenvolvida em Python com Streamlit e permite explorar indicadores por unidade da federação e município, visualizar informações coletadas por Web Scraping e acrescentar dados complementares por meio de arquivos CSV.
+A aplicação foi desenvolvida em Python com Streamlit e permite explorar indicadores por unidade da federação e município, consultar informações coletadas por Web Scraping e acrescentar dados complementares por meio de arquivos CSV.
 
-No TP3, a aplicação foi reorganizada em múltiplas páginas e integrada a uma API desenvolvida com FastAPI, permitindo também a consulta estruturada dos dados processados.
+No TP3, a aplicação foi reorganizada em múltiplas páginas e integrada a uma API desenvolvida com FastAPI. A interface Streamlit passou a consumir os dados processados por meio dessa API, estabelecendo uma separação entre a camada de apresentação e a camada de acesso aos dados.
 
 ## Problema de Negócio
 
@@ -77,10 +77,13 @@ A aplicação permite:
 - enviar arquivos CSV com dados complementares;
 - integrar os dados enviados utilizando o código IBGE;
 - baixar dados processados em formato CSV;
-- consultar dados por meio de uma API desenvolvida com FastAPI;
+- consultar os dados por meio de uma API desenvolvida com FastAPI;
 - realizar consultas GET de municípios pelo código IBGE;
+- consultar a lista de municípios disponíveis;
+- consultar as notícias coletadas por Web Scraping;
 - realizar requisições POST para comparação entre municípios;
-- consumir a própria FastAPI diretamente pela interface Streamlit.
+- consumir a própria FastAPI diretamente pela interface Streamlit;
+- tratar a indisponibilidade temporária da API sem interromper toda a aplicação.
 
 ## Aplicação Multipágina
 
@@ -100,28 +103,42 @@ A coleta de notícias é realizada pelo script:
 
 `02_data_ingest_understanding/coleta_noticias_mcom.py`
 
-O script utiliza `requests` e `BeautifulSoup` para coletar informações da página de notícias do Ministério das Comunicações.
+O script utiliza `requests` e `BeautifulSoup` para coletar notícias do portal oficial do Ministério das Comunicações.
 
-São coletados:
+No TP3, a coleta foi ampliada para considerar as páginas mensais de **outubro e novembro de 2026**, incluindo a paginação disponível no portal.
+
+O processo percorre automaticamente as páginas de cada mês até encontrar uma página sem novos registros.
+
+Para cada notícia são coletados:
 
 - título;
-- data;
+- data de publicação;
 - resumo;
 - link.
+
+A listagem mensal do Ministério das Comunicações apresenta a data de última modificação do conteúdo. Para evitar que essa informação seja confundida com a data original de publicação, o script acessa também a página individual de cada notícia e coleta a data disponibilizada no elemento `documentPublished`.
+
+No teste realizado após a atualização do processo, foram coletadas **89 notícias**, sendo 44 referentes à página de novembro e 45 referentes à página de outubro de 2026.
 
 O resultado é armazenado em:
 
 `02_data_ingest_understanding/data/noticias_mcom.csv`
 
-A coleta é executada separadamente da aplicação Streamlit. O aplicativo utiliza o arquivo CSV já gerado.
+A coleta é executada separadamente da aplicação Streamlit. O arquivo gerado é posteriormente disponibilizado pela FastAPI para consumo da interface.
 
 ### Avaliação do uso de Selenium
 
-Foi avaliada a necessidade de utilização do Selenium nesta etapa.
+Foi avaliada a necessidade de utilização do Selenium antes da definição da tecnologia de coleta.
 
-Entretanto, as fontes atualmente utilizadas pelo projeto não dependem de interação dinâmica com páginas web. Os dados do IBGE são obtidos por meio de API e as informações necessárias da página do Ministério das Comunicações estão disponíveis no HTML e podem ser coletadas com Requests e Beautiful Soup.
+O diagnóstico está registrado no script:
 
-Por esse motivo, o Selenium não foi utilizado, evitando dependências e complexidade adicionais sem benefício relevante para as fontes atuais.
+`02_data_ingest_understanding/diagnostico_scraping_mcom.py`
+
+O teste realizado na página de notícias do Ministério das Comunicações retornou status HTTP 200 e identificou títulos de notícias diretamente no HTML recebido pelo `requests`.
+
+Dessa forma, foi verificado que os dados necessários para a coleta já estavam disponíveis no HTML entregue pelo servidor, sem necessidade de executar JavaScript ou realizar interações com o navegador.
+
+Por esse motivo, a combinação `requests` + `BeautifulSoup` foi considerada suficiente para a fonte utilizada. O Selenium não foi incluído porque acrescentaria uma dependência e uma camada de complexidade sem necessidade técnica para esse caso.
 
 ## FastAPI
 
@@ -131,15 +148,19 @@ O arquivo responsável pela API é:
 
 `api.py`
 
-A API utiliza a base:
+A API utiliza os arquivos processados armazenados em:
 
-`02_data_ingest_understanding/data/dados_integrados.csv`
+`02_data_ingest_understanding/data/`
 
 Os principais endpoints são:
 
 ### GET `/`
 
 Retorna informações básicas sobre o projeto e o status da API.
+
+### GET `/municipios`
+
+Retorna a lista de municípios e seus respectivos indicadores disponíveis na base processada.
 
 ### GET `/municipios/{codigo_ibge}`
 
@@ -148,6 +169,10 @@ Consulta os indicadores de um município utilizando seu código IBGE.
 Exemplo:
 
 `/municipios/3304557`
+
+### GET `/noticias`
+
+Retorna as notícias coletadas pelo processo de Web Scraping.
 
 ### POST `/comparacao`
 
@@ -159,67 +184,129 @@ A documentação automática da API pode ser acessada, com o servidor em execuç
 
 ## Integração Streamlit e FastAPI
 
-A página **API** da aplicação Streamlit utiliza a biblioteca `requests` para consumir os endpoints da FastAPI.
+As requisições realizadas pela aplicação Streamlit foram centralizadas no arquivo:
 
-A integração permite:
+`src/cliente_api.py`
 
-- verificar se a API está disponível;
-- consultar um município por código IBGE;
-- comparar dois municípios por meio de uma requisição POST.
+Esse módulo concentra as chamadas HTTP utilizadas pelas páginas da aplicação para consultar os endpoints da FastAPI.
 
-Dessa forma, a aplicação apresenta uma separação entre a interface de visualização e a camada responsável por disponibilizar os dados.
+A integração é utilizada nas páginas de:
 
-## Cache e Session State
+- Análise Municipal;
+- Notícias e Conectividade;
+- Dados Complementares;
+- API.
 
-A aplicação utiliza `@st.cache_data` para evitar a leitura repetida dos arquivos de dados a cada interação com o Streamlit.
+Dessa forma, as páginas da interface não precisam acessar diretamente os arquivos CSV internos para obter os dados principais do projeto.
 
-O `st.session_state` é utilizado para manter informações específicas da sessão do usuário, como seleções realizadas e dados enviados por upload.
+A arquitetura utilizada pode ser representada de forma simplificada como:
+
+`Streamlit → cliente_api.py → FastAPI → dados processados`
+
+## Configuração da URL da API
+
+O endereço da FastAPI não fica fixado diretamente nas páginas da aplicação.
+
+A configuração é centralizada no arquivo:
+
+`config.py`
+
+Por padrão, o projeto utiliza:
+
+`http://127.0.0.1:8000`
+
+Também é possível definir outro endereço utilizando a variável de ambiente:
+
+`REDE_API_URL`
+
+Exemplo no PowerShell:
+
+```powershell
+$env:REDE_API_URL="http://127.0.0.1:8000"
+```
+
+Essa estrutura evita espalhar o endereço da API por diferentes arquivos da aplicação e facilita futuras alterações no ambiente de execução.
+
+## Tratamento de Indisponibilidade da API
+
+As páginas principais que dependem da FastAPI tratam erros de conexão.
+
+Caso a API esteja desligada ou temporariamente indisponível, o Streamlit apresenta uma mensagem amigável ao usuário em vez de exibir um traceback.
+
+O comportamento foi testado nas páginas:
+
+- Análise Municipal;
+- Notícias e Conectividade;
+- Dados Complementares.
+
+Após a API ser iniciada novamente, as páginas voltam a carregar os dados normalmente.
+
+## Session State
+
+O `st.session_state` é utilizado para manter informações específicas da sessão do usuário.
+
+Entre os usos atuais estão:
+
+- manutenção das seleções realizadas nos filtros;
+- armazenamento temporário dos dados enviados por upload;
+- utilização dos dados complementares em outras partes da aplicação durante a mesma sessão.
 
 ## Preparação para Uso Futuro de LLM
 
-Nesta etapa, ainda não foi realizada a integração com um modelo de linguagem.
+No TP3 ainda não foi realizada a integração com um modelo de linguagem.
 
-Como evolução futura, pretende-se utilizar uma LLM para gerar resumos interpretativos dos indicadores de um município selecionado.
+Como evolução do projeto, uma LLM poderá ser utilizada para processar informações textuais relacionadas aos dados de conectividade, mantendo a análise vinculada ao escopo e às informações disponíveis no projeto.
 
-O modelo poderá receber como contexto informações como:
-
-- percentual de domicílios sem acesso à internet;
-- renda mediana per capita;
-- comparação com os indicadores da unidade da federação;
-- informações textuais provenientes das notícias coletadas.
-
-A geração deverá permanecer descritiva, evitando inferir relações causais que não sejam sustentadas pelos dados.
+A integração deverá preservar o caráter descritivo da aplicação e evitar inferências causais que não sejam sustentadas pelos dados.
 
 ## Como Executar o Projeto
 
-1. Criar o ambiente virtual:
+### 1. Criar o ambiente virtual
 
-```bash
-python -m venv .venv
+```powershell
+py -m venv .venv
 ```
 
-2. Ativar o ambiente virtual:
+### 2. Ativar o ambiente virtual
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-3. Instalar as dependências:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-4. Executar a FastAPI:
-
-```bash
-python -m uvicorn api:app --reload
-```
-
-5. Em outro terminal, executar o Streamlit:
+Caso o PowerShell bloqueie a execução do script de ativação, pode ser necessário liberar a execução apenas para a sessão atual:
 
 ```powershell
-.\.venv\Scripts\python.exe -m streamlit run app.py
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+```
+
+### 3. Instalar as dependências
+
+```powershell
+py -m pip install -r requirements.txt
+```
+
+### 4. Executar a FastAPI
+
+Em um terminal:
+
+```powershell
+py -m uvicorn api:app --reload
+```
+
+A API ficará disponível, por padrão, em:
+
+`http://127.0.0.1:8000`
+
+A documentação automática poderá ser consultada em:
+
+`http://127.0.0.1:8000/docs`
+
+### 5. Executar o Streamlit
+
+Em outro terminal, com o mesmo ambiente virtual ativado:
+
+```powershell
+py -m streamlit run app.py
 ```
 
 ## Versionamento
@@ -232,4 +319,4 @@ https://github.com/amandamesquita-infnet/rede-de-acesso
 
 Uma ferramenta de Inteligência Artificial foi utilizada como apoio durante o desenvolvimento do projeto.
 
-- **ChatGPT - OpenAI, GPT-5.6 Sol:** utilizado como apoio na organização do projeto e identificação e correção de erros.
+- **ChatGPT - OpenAI, GPT-5.6 Sol:** utilizado como apoio na organização do projeto, revisão da arquitetura, identificação de problemas, depuração e correção de erros.
