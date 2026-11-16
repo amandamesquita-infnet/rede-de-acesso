@@ -1,15 +1,7 @@
 import streamlit as st
 import pandas as pd
-from pathlib import Path
 
-
-@st.cache_data
-def carregar_dados(caminho):
-    return pd.read_csv(
-        caminho,
-        dtype={"codigo_ibge": str}
-    )
-
+from src.cliente_api import listar_municipios
 
 st.title("Análise Municipal")
 
@@ -22,15 +14,8 @@ st.write(
 )
 
 
-# Caminho da base integrada
-arquivo_dados = (
-    Path(__file__).parent.parent
-    / "02_data_ingest_understanding"
-    / "data"
-    / "dados_integrados.csv"
-)
-
-df_acesso = carregar_dados(arquivo_dados)
+dados_api = listar_municipios()
+df_acesso = pd.DataFrame(dados_api["municipios"])
 
 
 # Separa UF e nome do município

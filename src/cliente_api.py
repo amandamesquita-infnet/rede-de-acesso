@@ -35,3 +35,13 @@ def verificar_status_api():
     resposta.raise_for_status()
 
     return resposta.json()
+
+def listar_municipios():
+    resposta = requests.get(
+        f"{API_URL}/municipios",
+        timeout=10
+    )
+
+    resposta.raise_for_status()
+
+    return resposta.json()

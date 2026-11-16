@@ -42,6 +42,32 @@ def inicio():
         "documentacao": "/docs"
     }
 
+@app.get("/municipios")
+def listar_municipios():
+
+    df = carregar_dados()
+
+    municipios = []
+
+    for _, linha in df.iterrows():
+
+        municipios.append(
+            {
+                "codigo_ibge": str(linha["codigo_ibge"]),
+                "municipio": linha["municipio"],
+                "percentual_sem_internet": float(
+                    linha["percentual_sem_internet"]
+                ),
+                "renda_mediana_per_capita": float(
+                    linha["renda_mediana_per_capita"]
+                )
+            }
+        )
+
+    return {
+        "quantidade": len(municipios),
+        "municipios": municipios
+    }
 
 @app.get("/municipios/{codigo_ibge}")
 def consultar_municipio(codigo_ibge: str):
