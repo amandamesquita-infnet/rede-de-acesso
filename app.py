@@ -21,6 +21,12 @@ paginas = [
         "pages/noticias.py",
         title="Notícias"
     ),
+
+    st.Page(
+        "pages/analise_llm.py",
+        title="Análise com Modelo Local"
+    ),
+    
     st.Page(
         "pages/dados_complementares.py",
         title="Dados Complementares"
@@ -29,6 +35,7 @@ paginas = [
         "pages/api.py",
         title="API"
     )
+    
 ]
 
 
