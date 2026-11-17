@@ -62,6 +62,7 @@ O mesmo banco de provas foi utilizado para avaliar os dois modelos candidatos.
 
 Foram avaliados dois modelos multilíngues voltados à classificação zero-shot.
 
+
 ### Modelo 1
 
 `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`
@@ -73,6 +74,15 @@ O modelo foi executado localmente utilizando a GPU NVIDIA disponível na máquin
 `MoritzLaurer/multilingual-MiniLMv2-L6-mnli-xnli`
 
 Este modelo também foi executado localmente com GPU e submetido exatamente aos mesmos 30 exemplos e às mesmas categorias.
+
+
+## Acessibilidade dos Modelos
+
+Os dois modelos avaliados estão disponíveis no Hugging Face e puderam ser baixados diretamente por meio da biblioteca `transformers`, sem necessidade de contratação de API ou serviço externo para realizar a inferência.
+
+Após o download, os arquivos do modelo escolhido são armazenados localmente no projeto. Dessa forma, sua utilização pela FastAPI não depende de conexão com serviços de nuvem durante o processamento dos textos.
+
+Esse aspecto também foi considerado na escolha do modelo, pois permite sua reprodução no ambiente local utilizado no projeto e atende ao requisito de execução sem dependência de serviços externos.
 
 ---
 
