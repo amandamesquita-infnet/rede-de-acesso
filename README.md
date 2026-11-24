@@ -6,11 +6,9 @@ Radar de Inclusão Digital e Conectividade nos Municípios Brasileiros.
 
 O projeto **Rede de Acesso** reúne e apresenta dados relacionados ao acesso à internet e à renda nos municípios brasileiros.
 
-A aplicação foi desenvolvida em Python com Streamlit e permite explorar indicadores por unidade da federação e município, consultar informações coletadas por Web Scraping, acrescentar dados complementares por meio de arquivos CSV e realizar classificação temática de textos utilizando um modelo de linguagem executado localmente.
+A aplicação foi desenvolvida em Python com Streamlit e FastAPI e permite explorar indicadores municipais, consultar informações coletadas por Web Scraping, utilizar um modelo local de classificação temática e interagir com um Assistente ESG com memória conversacional.
 
-No TP3, a aplicação foi reorganizada em múltiplas páginas e integrada a uma API desenvolvida com FastAPI. A interface Streamlit passou a consumir os dados processados por meio dessa API, estabelecendo uma separação entre a camada de apresentação e a camada de acesso aos dados.
-
-No TP4, a arquitetura foi ampliada com a integração de um modelo local para classificação zero-shot de textos relacionados às notícias do Ministério das Comunicações. O modelo é carregado pela FastAPI e pode ser utilizado pelo Streamlit sem depender de um serviço externo durante a inferência.
+O projeto evoluiu ao longo dos Testes de Performance, incorporando coleta e integração de dados, visualizações, API, modelagem de linguagem natural e uso de LLM com Prompt Engineering.
 
 ## Problema de Negócio
 
@@ -20,13 +18,21 @@ O projeto é orientado pela seguinte questão:
 
 A análise possui caráter descritivo e comparativo e não busca estabelecer relações de causa e efeito entre renda e acesso à internet.
 
+## Relação com ESG e ODS
+
+O projeto está relacionado principalmente à dimensão social de ESG, ao permitir observar diferenças territoriais de acesso digital e renda.
+
+A solução está associada principalmente aos seguintes Objetivos de Desenvolvimento Sustentável:
+
+- **ODS 4 — Educação de Qualidade**
+- **ODS 9 — Indústria, Inovação e Infraestrutura**
+- **ODS 10 — Redução das Desigualdades**
+
 ## Metodologia
 
-O desenvolvimento do projeto utiliza como referência as metodologias CRISP-DM e TDSP.
+O desenvolvimento utiliza como referência as metodologias CRISP-DM e TDSP.
 
 ### CRISP-DM
-
-O CRISP-DM orienta o processo analítico a partir das seguintes etapas:
 
 1. Business Understanding
 2. Data Understanding
@@ -35,13 +41,9 @@ O CRISP-DM orienta o processo analítico a partir das seguintes etapas:
 5. Evaluation
 6. Deployment
 
-No projeto, foram desenvolvidas etapas de definição do problema de negócio, coleta, tratamento, integração, exploração, modelagem, avaliação e disponibilização dos dados.
-
-No TP4, a etapa de Modeling passou a incluir a avaliação comparativa de modelos locais para classificação temática de textos.
-
 ### TDSP
 
-A organização dos diretórios segue as fases do Team Data Science Process (TDSP):
+A organização dos diretórios segue as fases do Team Data Science Process:
 
 1. Business Understanding
 2. Data Ingest & Understanding
@@ -49,64 +51,76 @@ A organização dos diretórios segue as fases do Team Data Science Process (TDS
 4. Deployment
 5. Acceptance
 
-O **Project Charter** está localizado em `01_business_understanding`.
+O **Project Charter** está localizado em:
 
-O **Data Summary Report**, os scripts de coleta e tratamento dos dados e os arquivos CSV estão localizados em `02_data_ingest_understanding`.
+`01_business_understanding/project_charter.md`
 
-Os scripts e resultados utilizados para comparação dos modelos estão localizados em `03_modeling`.
+O **Data Summary Report**, os scripts de coleta e tratamento e os arquivos de dados estão localizados em:
 
-A justificativa detalhada da escolha do modelo está disponível em:
+`02_data_ingest_understanding/`
 
-`docs/escolha_do_modelo.md`
+Os arquivos de avaliação dos modelos estão localizados em:
+
+`03_modeling/`
 
 ## Fontes de Dados
 
 Foram utilizadas as seguintes fontes:
 
-- **IBGE - SIDRA:** dados do Censo Demográfico 2022 sobre acesso domiciliar à internet e rendimento domiciliar mediano per capita;
-- **Ministério das Comunicações:** notícias coletadas por Web Scraping utilizando Requests e Beautiful Soup;
+- **IBGE — SIDRA:** dados do Censo Demográfico 2022 sobre acesso domiciliar à internet e rendimento domiciliar mediano per capita;
+- **Ministério das Comunicações:** notícias coletadas por Web Scraping utilizando `requests` e `BeautifulSoup`;
 - **Dados complementares do usuário:** arquivos CSV enviados pela própria aplicação.
 
 A integração dos dados municipais utiliza o código IBGE como chave.
+
+## Ciclo de Ciência de Dados
+
+O fluxo consolidado do projeto é:
+
+`Coleta → Tratamento → Integração → Análise → Modelagem/IA → Interpretação → Apresentação`
+
+A solução utiliza os dados coletados em diferentes etapas:
+
+- coleta via API SIDRA e Web Scraping;
+- limpeza e padronização dos dados;
+- integração das bases municipais;
+- análise quantitativa com Python e Pandas;
+- classificação temática com modelo local;
+- interpretação dos indicadores com LLM;
+- apresentação dos resultados em dashboard interativo.
 
 ## Funcionalidades
 
 A aplicação permite:
 
-- navegar entre diferentes páginas da aplicação;
-- selecionar uma unidade da federação e um município;
+- navegar entre diferentes páginas;
+- selecionar unidade da federação e município;
 - visualizar indicadores de acesso à internet e renda;
-- comparar o município selecionado com os indicadores da sua unidade da federação;
-- visualizar os municípios de uma UF em tabela;
-- consultar um panorama nacional dos municípios com maiores percentuais de domicílios sem internet;
+- comparar municípios e indicadores estaduais;
+- visualizar tabelas e gráficos;
 - consultar notícias coletadas por Web Scraping;
-- visualizar uma nuvem de palavras;
-- visualizar os termos mais frequentes encontrados nos títulos e resumos das notícias;
+- visualizar nuvem de palavras e frequência de termos;
 - enviar arquivos CSV com dados complementares;
-- integrar os dados enviados utilizando o código IBGE;
-- baixar dados processados em formato CSV;
-- consultar os dados por meio de uma API desenvolvida com FastAPI;
-- realizar consultas GET de municípios pelo código IBGE;
-- consultar a lista de municípios disponíveis;
-- consultar as notícias coletadas por Web Scraping;
-- realizar requisições POST para comparação entre municípios;
-- consumir a própria FastAPI diretamente pela interface Streamlit;
-- classificar textos em categorias relacionadas ao projeto utilizando um modelo local;
-- visualizar a categoria sugerida e as pontuações atribuídas pelo modelo;
-- tratar a indisponibilidade temporária da API ou do modelo sem interromper toda a aplicação.
+- integrar dados pelo código IBGE;
+- baixar dados processados;
+- consultar os dados por meio de FastAPI;
+- realizar classificação temática de textos com modelo local;
+- utilizar um Assistente ESG com memória conversacional;
+- fazer perguntas sucessivas preservando o contexto da conversa.
 
 ## Aplicação Multipágina
 
-A aplicação utiliza `st.navigation` e `st.Page`.
+A navegação da aplicação é implementada com `st.navigation` e `st.Page`.
 
-As funcionalidades estão distribuídas nas seguintes páginas:
+As principais páginas são:
 
 - **Início:** apresentação do projeto, problema de negócio, objetivo e ODS;
-- **Análise Municipal:** filtros, indicadores municipais, comparação estadual e panorama nacional;
-- **Notícias:** dados coletados por Web Scraping, tabela, nuvem de palavras e frequência de termos;
-- **Análise com Modelo Local:** classificação temática de textos utilizando o modelo integrado à FastAPI;
-- **Dados Complementares:** upload, validação, integração e download de arquivos CSV;
-- **API:** integração da interface Streamlit com a FastAPI do projeto.
+- **Análise Municipal:** filtros, indicadores, comparações e visualizações;
+- **Notícias:** conteúdo coletado por Web Scraping;
+- **Análise com Modelo Local:** classificação temática de textos;
+- **Assistente ESG:** interação em linguagem natural com memória conversacional;
+- **Dados Complementares:** upload e integração de dados adicionais;
+- **API:** demonstração da integração entre Streamlit e FastAPI.
 
 ## Web Scraping
 
@@ -114,362 +128,111 @@ A coleta de notícias é realizada pelo script:
 
 `02_data_ingest_understanding/coleta_noticias_mcom.py`
 
-O script utiliza `requests` e `BeautifulSoup` para coletar notícias do portal oficial do Ministério das Comunicações.
+O script utiliza `requests` e `BeautifulSoup`.
 
-No TP3, a coleta foi ampliada para considerar as páginas mensais de **outubro e novembro de 2026**, incluindo a paginação disponível no portal.
-
-O processo percorre automaticamente as páginas de cada mês até encontrar uma página sem novos registros.
-
-Para cada notícia são coletados:
+São coletados:
 
 - título;
-- data de publicação;
+- data;
 - resumo;
 - link.
-
-A listagem mensal do Ministério das Comunicações apresenta a data de última modificação do conteúdo. Para evitar que essa informação seja confundida com a data original de publicação, o script acessa também a página individual de cada notícia e coleta a data disponibilizada no elemento `documentPublished`.
-
-No teste realizado após a atualização do processo, foram coletadas **89 notícias**, sendo 44 referentes à página de novembro e 45 referentes à página de outubro de 2026.
 
 O resultado é armazenado em:
 
 `02_data_ingest_understanding/data/noticias_mcom.csv`
 
-A coleta é executada separadamente da aplicação Streamlit. O arquivo gerado é posteriormente disponibilizado pela FastAPI para consumo da interface.
+A coleta é executada separadamente da aplicação Streamlit.
 
 ### Avaliação do uso de Selenium
 
-Foi avaliada a necessidade de utilização do Selenium antes da definição da tecnologia de coleta.
+Foi avaliada a necessidade de utilização do Selenium.
 
-O diagnóstico está registrado no script:
+Como os dados necessários estavam disponíveis diretamente no HTML retornado pelo servidor, a combinação `requests` + `BeautifulSoup` foi suficiente.
 
-`02_data_ingest_understanding/diagnostico_scraping_mcom.py`
-
-O teste realizado na página de notícias do Ministério das Comunicações retornou status HTTP 200 e identificou títulos de notícias diretamente no HTML recebido pelo `requests`.
-
-Dessa forma, foi verificado que os dados necessários para a coleta já estavam disponíveis no HTML entregue pelo servidor, sem necessidade de executar JavaScript ou realizar interações com o navegador.
-
-Por esse motivo, a combinação `requests` + `BeautifulSoup` foi considerada suficiente para a fonte utilizada. O Selenium não foi incluído porque acrescentaria uma dependência e uma camada de complexidade sem necessidade técnica para esse caso.
+O Selenium não foi utilizado porque acrescentaria complexidade sem necessidade técnica para a fonte analisada.
 
 ## FastAPI
 
-A API disponibiliza os dados processados do projeto e o serviço de classificação temática.
+A FastAPI disponibiliza os dados processados e funcionalidades utilizadas pela aplicação.
 
-O arquivo responsável pela API é:
+O arquivo principal é:
 
 `api.py`
 
-Os dados processados utilizados pelas rotas estão armazenados em:
-
-`02_data_ingest_understanding/data/`
-
-### GET `/`
-
-Retorna informações básicas sobre o projeto, o status da API e informa se o modelo local foi carregado.
-
-Exemplo de resposta:
-
-```json
-{
-  "projeto": "Rede de Acesso",
-  "status": "API disponível",
-  "documentacao": "/docs",
-  "modelo_carregado": true
-}
-```
-
-### GET `/municipios`
-
-Retorna a lista de municípios e seus respectivos indicadores disponíveis na base processada.
-
-### GET `/municipios/{codigo_ibge}`
-
-Consulta os indicadores de um município utilizando seu código IBGE.
-
-Exemplo:
-
-`/municipios/3304557`
-
-### GET `/noticias`
-
-Retorna as notícias coletadas pelo processo de Web Scraping.
-
-### POST `/comparacao`
-
-Recebe uma lista de códigos IBGE e retorna os indicadores dos municípios solicitados para comparação.
-
-### POST `/processar_texto`
-
-Recebe um texto enviado pelo usuário e utiliza o modelo local para realizar sua classificação temática.
-
-As categorias possíveis são:
-
-- `RADIODIFUSAO`
-- `CONECTIVIDADE_INFRAESTRUTURA`
-- `ENDERECAMENTO_CORREIOS`
-- `INCLUSAO_CAPACITACAO_DIGITAL`
-- `USO_E_SETOR_DE_TELECOMUNICACOES`
-- `GESTAO_POLITICAS_PUBLICAS`
-
-A resposta contém:
-
-- tipo de análise;
-- texto processado;
-- categoria sugerida;
-- pontuação da categoria principal;
-- pontuação de todas as categorias;
-- identificação do modelo utilizado.
-
-A pontuação retornada representa a preferência do modelo entre as categorias apresentadas e **não deve ser interpretada como probabilidade real de acerto**.
-
-A documentação automática da API pode ser acessada, com o servidor em execução, em:
+A documentação automática pode ser acessada, com a API em execução, em:
 
 `http://127.0.0.1:8000/docs`
 
-## Response Models e Validação
-
-As rotas da FastAPI utilizam modelos Pydantic para validar a estrutura das respostas.
-
-Entre os modelos utilizados estão:
-
-- `StatusAPI`;
-- `Noticia`;
-- `ListaNoticias`;
-- `Municipio`;
-- `ListaMunicipios`;
-- `PedidoAnalise`;
-- `ResultadoAnalise`.
-
-O endpoint `/processar_texto` aceita textos entre 10 e 5000 caracteres.
-
-Campos adicionais não previstos no corpo da requisição são rejeitados pela validação da API.
-
-Entradas inválidas retornam resposta HTTP `422`.
-
-## Tratamento de Erros
-
-A aplicação utiliza tratamento de erros tanto na FastAPI quanto no Streamlit.
-
-### HTTP 404
-
-É utilizado quando um município solicitado não é encontrado.
-
-### HTTP 422
-
-É utilizado para erros de validação da entrada, como textos abaixo do tamanho mínimo ou campos adicionais não permitidos.
-
-### HTTP 503
-
-Caso o modelo local não possa ser carregado, o endpoint `/processar_texto` retorna `503 Service Unavailable`.
-
-As outras rotas da API permanecem disponíveis.
-
-Esse comportamento foi testado removendo temporariamente a pasta local do modelo. Nesse cenário:
-
-- `GET /` continuou respondendo normalmente;
-- `modelo_carregado` foi apresentado como `false`;
-- `POST /processar_texto` retornou HTTP 503;
-- após a restauração do modelo, a API voltou a informar `modelo_carregado: true`.
-
-### HTTP 500
-
-Erros internos inesperados são tratados pela API e retornam uma resposta JSON padronizada, enquanto o detalhe técnico é registrado no log.
-
-### Timeout
-
-O cliente utilizado pelo Streamlit define limite de tempo para as requisições.
-
-Na análise com o modelo local, o timeout foi definido em 30 segundos.
-
-## Integração Streamlit e FastAPI
-
-As requisições realizadas pela aplicação Streamlit foram centralizadas no arquivo:
+A comunicação entre Streamlit e FastAPI é centralizada em:
 
 `src/cliente_api.py`
 
-Esse módulo concentra as chamadas HTTP utilizadas pelas páginas da aplicação para consultar os endpoints da FastAPI.
-
-A integração é utilizada nas páginas de:
-
-- Análise Municipal;
-- Notícias e Conectividade;
-- Análise com Modelo Local;
-- Dados Complementares;
-- API.
-
-A arquitetura utilizada pode ser representada de forma simplificada como:
-
-`Streamlit → cliente_api.py → FastAPI → dados processados / modelo local`
-
-O Streamlit não carrega diretamente o modelo de linguagem.
-
-A interface envia o texto para a FastAPI por meio de `POST /processar_texto` e apresenta ao usuário a resposta validada pela API.
-
 ## Modelo Local
 
-### Tarefa
-
-O modelo é utilizado para classificação temática zero-shot de textos relacionados ao escopo do projeto.
-
-A classificação utiliza seis categorias previamente definidas.
-
-### Banco de Provas
-
-Foi criado um banco de provas com **30 notícias reais** coletadas pelo projeto.
-
-Os textos foram rotulados manualmente antes dos testes dos modelos.
-
-O conjunto possui cinco exemplos para cada uma das seis categorias.
-
-O arquivo utilizado é:
-
-`03_modeling/banco_de_provas.csv`
-
-### Modelos Avaliados
-
-Foram avaliados dois modelos candidatos:
-
-1. `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7`
-2. `MoritzLaurer/multilingual-MiniLMv2-L6-mnli-xnli`
-
-Os dois modelos receberam o mesmo banco de provas, as mesmas categorias e o mesmo texto de hipótese.
-
-### Resultados
-
-| Métrica | mDeBERTa | MiniLMv2 |
-|---|---:|---:|
-| Acertos | 8/30 | 14/30 |
-| Acurácia | 26,67% | **46,67%** |
-| Tempo de carregamento local | 3,67 s | 3,85 s |
-| Tempo total de inferência | 7,37 s | **2,04 s** |
-| Tempo médio por notícia | 0,25 s | **0,07 s** |
-| Pico de memória CUDA | 556,00 MB | **418,71 MB** |
-
-### Modelo Escolhido
-
-O modelo selecionado foi:
+O projeto utiliza o modelo:
 
 `MoritzLaurer/multilingual-MiniLMv2-L6-mnli-xnli`
 
-A escolha considerou o desempenho no banco de provas do próprio projeto e o custo computacional medido na máquina utilizada para desenvolvimento.
+O modelo foi selecionado após comparação com outro modelo multilíngue utilizando um banco de provas com notícias reais coletadas pelo projeto.
 
-O MiniLMv2 apresentou maior acurácia, menor tempo de inferência e menor utilização de memória da GPU.
+Sua função é realizar **classificação temática zero-shot** dos textos.
 
-A acurácia obtida, entretanto, ainda é limitada. Por isso, a classificação é apresentada na aplicação como uma **sugestão do modelo**, e não como uma classificação definitiva.
+As classificações apresentadas pela aplicação devem ser interpretadas como sugestões temáticas.
 
-A justificativa detalhada está disponível em:
+## Assistente ESG com Memória Conversacional
 
-`docs/escolha_do_modelo.md`
+No TP5 foi incorporado um Assistente ESG utilizando um LLM acessado pela API da Groq.
 
-## Ambiente Utilizado para o Modelo
+A funcionalidade permite realizar perguntas sobre os indicadores municipais e manter o contexto entre interações sucessivas.
 
-Os testes foram realizados no seguinte equipamento:
+A memória conversacional é mantida durante a sessão utilizando:
 
-- **CPU:** Intel Core i5-12450HX;
-- **RAM:** 31,73 GB;
-- **GPU:** NVIDIA GeForce RTX 3050 Laptop GPU;
-- **VRAM:** 6 GB;
-- **PyTorch:** 2.11.0+cu128;
-- **Transformers:** 5.23.0;
-- **SentencePiece:** 0.2.3;
-- **CUDA reconhecida pelo PyTorch:** sim.
+`st.session_state`
 
-Durante o benchmark do modelo escolhido, o pico de memória CUDA foi de aproximadamente **418,71 MB**.
+Para evitar crescimento indefinido do contexto, a aplicação envia ao modelo apenas uma janela das interações mais recentes.
 
-O tempo médio medido foi de aproximadamente **0,07 segundo por notícia** no banco de provas utilizado.
+### Separação entre cálculo e LLM
 
-O código também prevê execução em CPU caso CUDA não esteja disponível, embora os resultados registrados neste projeto tenham sido obtidos utilizando a GPU descrita acima.
+Os cálculos quantitativos são realizados pela aplicação com Python e Pandas.
 
-## Download e Execução Local do Modelo
+Entre os indicadores fornecidos ao Assistente ESG estão:
 
-O download do modelo é realizado separadamente da inicialização da API.
+- média do percentual de domicílios sem internet;
+- mediana da renda per capita;
+- municípios com maior e menor percentual sem internet;
+- municípios com maior e menor renda mediana per capita.
 
-O script responsável é:
+O LLM é utilizado para interpretar os fatos calculados e gerar respostas em linguagem natural.
 
-`src/baixar_modelo.py`
+## Prompt Engineering
 
-Para baixar e salvar o modelo dentro do projeto:
+O prompt do Assistente ESG foi estruturado para:
 
-```powershell
-py -m src.baixar_modelo
-```
+- responder em português;
+- utilizar somente os fatos fornecidos pela aplicação;
+- não inventar municípios, indicadores ou valores;
+- não alterar os resultados calculados em Python;
+- evitar relações causais não sustentadas pelos dados;
+- informar quando a informação solicitada não estiver disponível;
+- relacionar os resultados aos ODS quando pertinente.
 
-O modelo será armazenado em:
+Durante os testes, o assistente manteve o contexto entre perguntas e também recusou fornecer uma informação que não fazia parte dos dados disponibilizados.
 
-`modelos/minilm_multilingual`
+## Segurança da Chave da API
 
-A pasta `modelos/` está incluída no `.gitignore` para evitar o envio dos arquivos de pesos para o repositório Git.
+A chave da Groq não é armazenada no código-fonte.
 
-Durante a execução da FastAPI, o modelo é carregado a partir dessa pasta utilizando `local_files_only=True`.
+Ela deve ser configurada localmente no arquivo:
 
-Dessa forma, após o download inicial, a inferência não depende de uma conexão com o Hugging Face ou outro serviço de nuvem.
+`.env`
 
-O módulo responsável pelo carregamento e pela inferência é:
-
-`src/analisador_llm.py`
-
-## Carregamento do Modelo
-
-A FastAPI utiliza `lifespan` para carregar o modelo uma única vez durante a inicialização da aplicação.
-
-O modelo permanece disponível para as requisições seguintes e não é recarregado a cada chamada de `/processar_texto`.
-
-Caso o carregamento falhe, a exceção é tratada e a API continua disponível para as outras funcionalidades.
-
-## Configuração da URL da API
-
-O endereço da FastAPI não fica fixado diretamente nas páginas da aplicação.
-
-A configuração é centralizada no arquivo:
-
-`config.py`
-
-Por padrão, o projeto utiliza:
-
-`http://127.0.0.1:8000`
-
-Também é possível definir outro endereço utilizando a variável de ambiente:
-
-`REDE_API_URL`
-
-Exemplo no PowerShell:
-
-```powershell
-$env:REDE_API_URL="http://127.0.0.1:8000"
-```
-
-Essa estrutura evita espalhar o endereço da API por diferentes arquivos da aplicação e facilita futuras alterações no ambiente de execução.
-
-## Tratamento de Indisponibilidade no Streamlit
-
-As páginas que dependem da FastAPI tratam erros de conexão.
-
-Caso a API esteja desligada ou temporariamente indisponível, o Streamlit apresenta uma mensagem amigável ao usuário em vez de exibir um traceback.
-
-Na página **Análise com Modelo Local**, também são tratados:
-
-- erro de validação da entrada;
-- indisponibilidade do modelo;
-- timeout;
-- falha de comunicação com a FastAPI.
-
-Quando o modelo retorna HTTP 503, a interface informa:
-
-> O modelo de análise está indisponível. As demais rotas da API continuam funcionando.
-
-## Session State
-
-O `st.session_state` é utilizado para manter informações específicas da sessão do usuário.
-
-Entre os usos atuais estão:
-
-- manutenção das seleções realizadas nos filtros;
-- armazenamento temporário dos dados enviados por upload;
-- utilização dos dados complementares em outras partes da aplicação durante a mesma sessão.
+O arquivo `.env` está incluído no `.gitignore` e não deve ser enviado ao GitHub.
 
 ## Como Executar o Projeto
 
 ### 1. Criar o ambiente virtual
+
+No Windows:
 
 ```powershell
 py -m venv .venv
@@ -481,103 +244,82 @@ py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-Caso o PowerShell bloqueie a execução do script de ativação, pode ser necessário liberar a execução apenas para a sessão atual:
+Caso o PowerShell bloqueie a execução do script:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 ```
 
-### 3. Instalar as dependências completas
-
-Para executar o Streamlit, a FastAPI e o modelo local:
+Depois:
 
 ```powershell
-py -m pip install -r requirements-api.txt
+.\.venv\Scripts\Activate.ps1
 ```
 
-O arquivo `requirements-api.txt` utiliza o `requirements.txt` como base e acrescenta as dependências necessárias para o modelo local.
-
-### 4. Baixar o modelo
-
-Antes de iniciar a API pela primeira vez:
+### 3. Instalar as dependências
 
 ```powershell
-py -m src.baixar_modelo
+python -m pip install -r requirements.txt
 ```
 
-O download é uma etapa separada da execução da API.
+### 4. Configurar a chave da Groq
 
-Após essa etapa, o modelo será utilizado localmente.
+Crie um arquivo chamado:
+
+`.env`
+
+na raiz do projeto.
+
+Adicione:
+
+```text
+GROQ_API_KEY=sua_chave_da_groq
+```
+
+Substitua `sua_chave_da_groq` por uma chave válida.
+
+**Nunca envie esse arquivo para o GitHub.**
 
 ### 5. Executar a FastAPI
 
-Em um terminal:
+Em um terminal com o ambiente virtual ativado:
 
 ```powershell
-py -m uvicorn api:app --reload
+python -m uvicorn api:app --reload
 ```
 
-A API ficará disponível, por padrão, em:
+A API ficará disponível em:
 
 `http://127.0.0.1:8000`
 
-A documentação automática poderá ser consultada em:
+Documentação:
 
 `http://127.0.0.1:8000/docs`
 
 ### 6. Executar o Streamlit
 
-Em outro terminal, com o mesmo ambiente virtual ativado:
+Em outro terminal, com o ambiente virtual ativado:
 
 ```powershell
-py -m streamlit run app.py
+python -m streamlit run app.py
 ```
 
-O endereço local será informado pelo próprio Streamlit no terminal.
+A aplicação ficará disponível normalmente em:
 
-## Estrutura Relacionada ao TP4
-
-Os principais arquivos acrescentados ou utilizados no TP4 são:
-
-```text
-03_modeling/
-├── avaliar_modelo_1.py
-├── avaliar_modelo_2.py
-├── banco_de_provas.csv
-├── criar_banco_de_provas.py
-├── resultado_modelo_1.csv
-├── resultado_modelo_2.csv
-└── teste_modelo_1.py
-
-docs/
-└── escolha_do_modelo.md
-
-src/
-├── analisador_llm.py
-├── baixar_modelo.py
-└── cliente_api.py
-
-pages/
-└── analise_llm.py
-
-api.py
-requirements-api.txt
-```
-
-Os pesos do modelo são armazenados localmente na pasta `modelos/`, que não é versionada no Git.
+`http://localhost:8501`
 
 ## Versionamento
 
-O projeto está disponível no GitHub:
+Repositório do projeto:
 
 https://github.com/amandamesquita-infnet/rede-de-acesso
 
-O desenvolvimento do TP4 foi realizado inicialmente no branch:
-
-`tp4-llm`
-
 ## Uso de Inteligência Artificial
 
-Uma ferramenta de Inteligência Artificial foi utilizada como apoio durante o desenvolvimento do projeto.
+Ferramentas e modelos de Inteligência Artificial foram utilizados durante o desenvolvimento do projeto:
 
-- **ChatGPT - OpenAI, GPT-5.6 Sol:** utilizado como apoio na organização do projeto, revisão da arquitetura, identificação de problemas, depuração e correção de erros.
+- **ChatGPT — OpenAI, GPT-5.6 Sol:** apoio à revisão da arquitetura, depuração, e identificação de erros;
+- **Groq API — modelo `openai/gpt-oss-20b`:** utilizado no Assistente ESG para interpretação dos fatos fornecidos pela aplicação e manutenção do contexto conversacional;
+- **Hugging Face — `MoritzLaurer/multilingual-MiniLMv2-L6-mnli-xnli`:** modelo local utilizado para classificação temática zero-shot.
+
+As respostas produzidas pelo Assistente ESG são limitadas ao contexto disponibilizado pela aplicação, e os cálculos quantitativos permanecem sob responsabilidade do código Python.
